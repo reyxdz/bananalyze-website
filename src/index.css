@@ -1,0 +1,453 @@
+/* ==========================================================================
+   BANANA CHECK - Modern Agricultural Edge-AI Design System
+   ========================================================================== */
+
+:root {
+  /* Brand agricultural & botanical palette */
+  --primary: #2E7D32;
+  --primary-dark: #1B5E20;
+  --primary-light: #4CAF50;
+  --primary-glow: rgba(46, 125, 50, 0.4);
+  
+  --emerald: #10B981;
+  --emerald-neon: #34D399;
+  --emerald-glow: rgba(52, 211, 153, 0.35);
+
+  /* Banana ripeness palette */
+  --banana-unripe: #84CC16;
+  --banana-unripe-glow: rgba(132, 204, 22, 0.3);
+  --banana-ripe: #FBBF24;
+  --banana-ripe-amber: #F59E0B;
+  --banana-ripe-glow: rgba(251, 191, 36, 0.4);
+  --banana-overripe: #D97706;
+  --banana-overripe-dark: #854D0E;
+
+  /* Dark Obsidian Theme (Default - high tech edge AI aesthetic) */
+  --bg-deep: #070B08;
+  --bg-surface: #0E1610;
+  --bg-surface-elevated: #152219;
+  --bg-card: rgba(18, 30, 22, 0.75);
+  --bg-card-hover: rgba(25, 42, 31, 0.9);
+  
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-bright: rgba(52, 211, 153, 0.3);
+  --border-banana: rgba(251, 191, 36, 0.35);
+
+  --text-primary: #F0FDF4;
+  --text-secondary: #94A3B8;
+  --text-muted: #64748B;
+  --text-accent: #34D399;
+
+  /* Typography */
+  --font-heading: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Radii & Shadows */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 22px;
+  --radius-xl: 32px;
+  --radius-full: 9999px;
+
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.6);
+  --shadow-glow: 0 0 40px var(--emerald-glow);
+  --shadow-banana: 0 0 40px var(--banana-ripe-glow);
+
+  --transition-fast: 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-smooth: 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-bounce: 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Light / High-Contrast Field Day Mode (Outdoor Agricultural Sunshine) */
+[data-theme="light"] {
+  --bg-deep: #F4F7F2;
+  --bg-surface: #FFFFFF;
+  --bg-surface-elevated: #EAF0E7;
+  --bg-card: rgba(255, 255, 255, 0.9);
+  --bg-card-hover: #FFFFFF;
+  
+  --border-subtle: rgba(46, 125, 50, 0.15);
+  --border-bright: rgba(46, 125, 50, 0.4);
+  --border-banana: rgba(217, 119, 6, 0.35);
+
+  --text-primary: #122116;
+  --text-secondary: #3D5242;
+  --text-muted: #5E7564;
+  --text-accent: #1B5E20;
+
+  --shadow-sm: 0 2px 8px rgba(18, 33, 22, 0.08);
+  --shadow-md: 0 8px 24px rgba(18, 33, 22, 0.12);
+  --shadow-lg: 0 16px 48px rgba(18, 33, 22, 0.18);
+  --shadow-glow: 0 0 30px rgba(46, 125, 50, 0.15);
+  --shadow-banana: 0 0 30px rgba(245, 158, 11, 0.2);
+}
+
+/* ==========================================================================
+   Base & Resets
+   ========================================================================== */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--bg-deep);
+  color: var(--text-primary);
+  line-height: 1.6;
+  overflow-x: hidden;
+  transition: background-color var(--transition-smooth), color var(--transition-smooth);
+
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 9px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-deep);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--bg-surface-elevated);
+  border-radius: var(--radius-full);
+  border: 2px solid var(--bg-deep);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
+/* Selection */
+::selection {
+  background: var(--emerald-neon);
+  color: #052e16;
+}
+
+/* Typography Helpers */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+  color: var(--text-primary);
+}
+
+p {
+  color: var(--text-secondary);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+/* ==========================================================================
+   Glassmorphic & Card Utilities
+   ========================================================================== */
+
+.glass-panel {
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-smooth);
+}
+
+.glass-panel:hover {
+  border-color: var(--border-bright);
+}
+
+.glass-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  font-size: 0.85rem;
+  font-weight: 500;
+  backdrop-filter: blur(12px);
+}
+
+/* Accent Text */
+.gradient-text-emerald {
+  color: #34D399;
+}
+
+.gradient-text-banana {
+  color: #FBBF24;
+}
+
+/* ==========================================================================
+   Keyframe Animations
+   ========================================================================== */
+
+@keyframes scanLine {
+  0% {
+    top: 5%;
+    opacity: 0.2;
+  }
+  20% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    top: 92%;
+    opacity: 0.2;
+  }
+}
+
+@keyframes pulseLaser {
+  0%, 100% {
+    box-shadow: 0 0 15px #34D399, 0 0 30px rgba(52, 211, 153, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 25px #10B981, 0 0 45px rgba(16, 185, 129, 0.7);
+  }
+}
+
+@keyframes floatSlow {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(1deg);
+  }
+}
+
+@keyframes radarWave {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+@keyframes tickerScroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* ==========================================================================
+   Interactive Phone Simulator Styles
+   ========================================================================== */
+
+.phone-mockup-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 360px;
+  margin: 0 auto;
+}
+
+.phone-chassis {
+  position: relative;
+  background: #000000;
+  border: 4px solid #2D3A31;
+  border-radius: 46px;
+  padding: 12px;
+  box-shadow: 
+    0 25px 60px -15px rgba(0, 0, 0, 0.8),
+    0 0 0 1px rgba(255, 255, 255, 0.1),
+    0 0 50px rgba(46, 125, 50, 0.25);
+  overflow: hidden;
+}
+
+.phone-screen {
+  position: relative;
+  background: #09110B;
+  border-radius: 36px;
+  overflow: hidden;
+  height: 680px;
+  display: flex;
+  flex-direction: column;
+}
+
+.phone-notch {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 110px;
+  height: 24px;
+  background: #000000;
+  border-radius: 14px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.phone-camera-lens {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #152219;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.phone-status-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #E2E8F0;
+  z-index: 40;
+}
+
+.scanner-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.scanner-laser {
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  height: 2px;
+  background: #34D399;
+  box-shadow: 0 0 15px #34D399;
+  animation: scanLine 2.2s ease-in-out infinite alternate;
+}
+
+.reticle-corner {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border-color: #34D399;
+  border-style: solid;
+  border-width: 0;
+  filter: drop-shadow(0 0 6px rgba(52, 211, 153, 0.8));
+}
+
+.reticle-tl { top: 30px; left: 30px; border-top-width: 3px; border-left-width: 3px; border-top-left-radius: 8px; }
+.reticle-tr { top: 30px; right: 30px; border-top-width: 3px; border-right-width: 3px; border-top-right-radius: 8px; }
+.reticle-bl { bottom: 30px; left: 30px; border-bottom-width: 3px; border-left-width: 3px; border-bottom-left-radius: 8px; }
+.reticle-br { bottom: 30px; right: 30px; border-bottom-width: 3px; border-right-width: 3px; border-bottom-right-radius: 8px; }
+
+/* Shutter Button (>= 64dp per guidelines) */
+.camera-shutter-btn {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: white;
+  border: 4px solid rgba(255, 255, 255, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.camera-shutter-btn:active {
+  transform: scale(0.92);
+}
+
+.camera-shutter-inner {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: #FBBF24;
+  border: 2px solid white;
+  transition: background-color var(--transition-fast);
+}
+
+/* ==========================================================================
+   Ticker Bar
+   ========================================================================== */
+
+.ticker-wrap {
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  padding: 14px 0;
+  background: rgba(21, 34, 25, 0.6);
+  border-top: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.ticker-track {
+  display: inline-flex;
+  gap: 40px;
+  animation: tickerScroll 28s linear infinite;
+}
+
+.ticker-track:hover {
+  animation-play-state: paused;
+}
+
+.ticker-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-mono);
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+/* ==========================================================================
+   Responsive Utilities
+   ========================================================================== */
+
+.container {
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 0 16px;
+  }
+}
