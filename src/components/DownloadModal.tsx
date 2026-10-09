@@ -1,251 +1,208 @@
-import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, Smartphone, Download, QrCode, ShieldCheck, Check, Copy } from 'lucide-react';
-import { sound } from '../utils/audio';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { encode } from 'uqr';
+import { EASE_OUT, useIconTrigger } from '../lib/motion';
+import { lockScroll } from '../lib/smoothScroll';
+import { RELEASES_URL, formatMegabytes, useRelease } from '../lib/release';
+import { BananaMark, CheckIcon, CloseIcon, CopyIcon, DownloadIcon, LockIcon } from './AnimatedIcons';
+import { GithubIcon } from './GithubIcon';
+import './DownloadModal.css';
 
 interface DownloadModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+const QUIET = 1;
+
+const Finder: React.FC<{ x: number; y: number }> = ({ x, y }) => (
+  <g transform={`translate(${x} ${y})`}>
+    <rect width="7" height="7" rx="1.6" fill="var(--ink)" />
+    <rect x="1" y="1" width="5" height="5" rx="1" fill="#fff" />
+    <rect x="2" y="2" width="3" height="3" rx="0.6" fill="var(--ink)" />
+  </g>
+);
+
+/** A real, scannable code; the three finder squares are drawn as rounded marks instead of modules. */
+const QrCode: React.FC<{ value: string }> = ({ value }) => {
+  const { size, cells } = useMemo(() => {
+    const { size, data } = encode(value, { ecc: 'M', border: 0 });
+    const inFinder = (x: number, y: number) =>
+      (x < 7 && y < 7) || (x >= size - 7 && y < 7) || (x < 7 && y >= size - 7);
+    const cells: [number, number][] = [];
+    data.forEach((row, y) => row.forEach((dark, x) => dark && !inFinder(x, y) && cells.push([x, y])));
+    return { size, cells };
+  }, [value]);
+
+  const full = size + QUIET * 2;
+  return (
+    <svg viewBox={`${-QUIET} ${-QUIET} ${full} ${full}`} className="modal__qr-code tone-light" aria-hidden="true">
+      <rect x={-QUIET} y={-QUIET} width={full} height={full} fill="#fff" />
+      {cells.map(([x, y]) => (
+        <motion.rect
+          key={`${value}-${x}-${y}`}
+          x={x + 0.04}
+          y={y + 0.04}
+          width="0.92"
+          height="0.92"
+          rx="0.18"
+          fill="var(--ink)"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.25 + ((x + y) / (size * 2)) * 0.6, duration: 0.3 }}
+        />
+      ))}
+      <Finder x={0} y={0} />
+      <Finder x={size - 7} y={0} />
+      <Finder x={0} y={size - 7} />
+    </svg>
+  );
+};
+
 export const DownloadModal: React.FC<DownloadModalProps> = ({ isOpen, onClose }) => {
-  const [copied, setCopied] = React.useState(false);
-  const shaHash = 'e7b94c810fe1b0be5942a031c040c1a92e43e279a509d3b23321967ee8419da4';
+  const [copied, setCopied] = useState(false);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const trigger = useIconTrigger();
+  const release = useRelease();
+  const ready = release.status === 'ready' ? release : null;
+
+  useEffect(() => {
+    lockScroll(isOpen);
+    if (!isOpen) return;
+    const previous = document.activeElement as HTMLElement | null;
+    const t = window.setTimeout(() => closeRef.current?.focus(), 50);
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.clearTimeout(t);
+      window.removeEventListener('keydown', onKey);
+      previous?.focus?.();
+    };
+  }, [isOpen, onClose]);
 
   const copyHash = () => {
-    sound.playTap();
-    navigator.clipboard?.writeText(shaHash);
+    if (!ready) return;
+    navigator.clipboard?.writeText(ready.apk.sha256);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    window.setTimeout(() => setCopied(false), 2000);
   };
 
   return (
     <AnimatePresence>
       {isOpen && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          zIndex: 200,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '20px'
-        }}>
-          {/* Backdrop */}
+        <div className="modal" role="dialog" aria-modal="true" aria-labelledby="download-title">
           <motion.div
+            className="modal__backdrop"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => {
-              sound.playTap();
-              onClose();
-            }}
-            style={{
-              position: 'absolute',
-              inset: 0,
-              background: 'rgba(0, 0, 0, 0.8)',
-              backdropFilter: 'blur(12px)',
-              WebkitBackdropFilter: 'blur(12px)'
-            }}
+            transition={{ duration: 0.4 }}
+            onClick={onClose}
           />
 
-          {/* Modal Dialog */}
           <motion.div
-            initial={{ scale: 0.9, opacity: 0, y: 20 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.9, opacity: 0, y: 20 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="glass-panel"
-            style={{
-              position: 'relative',
-              width: '100%',
-              maxWidth: '560px',
-              padding: '36px',
-              borderRadius: '28px',
-              background: '#0E1A11',
-              border: '1px solid rgba(52, 211, 153, 0.4)',
-              boxShadow: '0 25px 60px rgba(0, 0, 0, 0.8)',
-              zIndex: 210
-            }}
+            className="modal__card"
+            initial={{ opacity: 0, y: 60, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 30, scale: 0.98, transition: { duration: 0.25 } }}
+            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
           >
-            {/* Close Button */}
-            <button
-              onClick={() => {
-                sound.playTap();
-                onClose();
-              }}
-              style={{
-                position: 'absolute',
-                top: '20px',
-                right: '20px',
-                width: '36px',
-                height: '36px',
-                borderRadius: '50%',
-                background: 'rgba(255, 255, 255, 0.08)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#94A3B8',
-                cursor: 'pointer'
-              }}
+            <motion.button
+              ref={closeRef}
+              className="icon-btn modal__close"
+              onClick={onClose}
+              aria-label="Close"
+              {...trigger}
             >
-              <X size={18} />
-            </button>
+              <CloseIcon size={18} />
+            </motion.button>
 
-            {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '20px' }}>
-              <div style={{
-                width: '48px',
-                height: '48px',
-                borderRadius: '14px',
-                background: '#1B5E20',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                border: '1px solid #34D399',
-                color: '#34D399'
-              }}>
-                <Smartphone size={24} />
-              </div>
+            <motion.div
+              className="modal__head"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1, duration: 0.6, ease: EASE_OUT }}
+            >
+              <BananaMark size={44} play />
               <div>
-                <h3 style={{
-                  fontSize: '1.45rem',
-                  fontWeight: 800,
-                  color: '#FFFFFF',
-                  margin: 0
-                }}>
-                  Download Banana Check APK
-                </h3>
-                <span style={{ fontSize: '0.8rem', color: '#94A3B8' }}>
-                  Release v1.0.4 • 100% Offline Standalone Build
-                </span>
-              </div>
-            </div>
-
-            {/* Simulated QR Code for Mobile Scanning */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '20px',
-              padding: '18px',
-              borderRadius: '18px',
-              background: 'rgba(0, 0, 0, 0.45)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              marginBottom: '24px'
-            }}>
-              {/* QR Code Graphic */}
-              <div style={{
-                width: '90px',
-                height: '90px',
-                background: '#FFFFFF',
-                borderRadius: '12px',
-                padding: '6px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0
-              }}>
-                <svg viewBox="0 0 100 100" style={{ width: '100%', height: '100%' }}>
-                  <rect width="100" height="100" fill="#FFFFFF" />
-                  {/* Position detection markers */}
-                  <rect x="5" y="5" width="28" height="28" fill="#0D2818" rx="4" />
-                  <rect x="11" y="11" width="16" height="16" fill="#FFFFFF" />
-                  <rect x="15" y="15" width="8" height="8" fill="#0D2818" />
-
-                  <rect x="67" y="5" width="28" height="28" fill="#0D2818" rx="4" />
-                  <rect x="73" y="11" width="16" height="16" fill="#FFFFFF" />
-                  <rect x="77" y="15" width="8" height="8" fill="#0D2818" />
-
-                  <rect x="5" y="67" width="28" height="28" fill="#0D2818" rx="4" />
-                  <rect x="11" y="73" width="16" height="16" fill="#FFFFFF" />
-                  <rect x="15" y="77" width="8" height="8" fill="#0D2818" />
-
-                  {/* QR Pattern noise */}
-                  <rect x="40" y="8" width="6" height="12" fill="#0D2818" />
-                  <rect x="50" y="14" width="8" height="6" fill="#0D2818" />
-                  <rect x="40" y="24" width="16" height="6" fill="#0D2818" />
-                  <rect x="10" y="42" width="18" height="8" fill="#0D2818" />
-                  <rect x="36" y="38" width="24" height="24" fill="#0D2818" rx="2" />
-                  <rect x="42" y="44" width="12" height="12" fill="#FFFFFF" />
-                  <rect x="68" y="42" width="10" height="18" fill="#0D2818" />
-                  <rect x="84" y="46" width="10" height="10" fill="#0D2818" />
-                  <rect x="40" y="68" width="14" height="10" fill="#0D2818" />
-                  <rect x="60" y="70" width="12" height="22" fill="#0D2818" />
-                  <rect x="78" y="68" width="16" height="6" fill="#0D2818" />
-                  <rect x="76" y="80" width="18" height="12" fill="#0D2818" />
-                </svg>
-              </div>
-
-              <div>
-                <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#FFFFFF', marginBottom: '4px' }}>
-                  Scan with Your Phone Camera
-                </div>
-                <p style={{ fontSize: '0.8rem', color: '#94A3B8', margin: 0, lineHeight: 1.5 }}>
-                  Installs directly on Android 5.0+ devices. Zero Google Play account or cloud sign-in necessary.
+                <h2 id="download-title" className="modal__title">
+                  Get Bananalyze
+                </h2>
+                <p className="mono modal__sub">
+                  {ready
+                    ? `v${ready.apk.version} · Android ${ready.apk.minAndroid}+ · ${formatMegabytes(ready.apk.bytes)}`
+                    : 'Android 5.0+ · first public build on the way'}
                 </p>
               </div>
-            </div>
+            </motion.div>
 
-            {/* Direct Download Button */}
-            <motion.a
-              href="https://github.com/reyxdz/bananaCheck/releases"
-              target="_blank"
-              rel="noopener noreferrer"
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={() => sound.playSuccess()}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '10px',
-                width: '100%',
-                padding: '16px',
-                borderRadius: '16px',
-                background: '#10B981',
-                color: '#062817',
-                fontWeight: 800,
-                fontSize: '1.05rem',
-                boxShadow: '0 8px 24px rgba(16, 185, 129, 0.4)',
-                cursor: 'pointer',
-                marginBottom: '16px'
-              }}
+            <motion.div
+              className="modal__qr"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.18, duration: 0.6, ease: EASE_OUT }}
             >
-              <Download size={20} />
-              <span>Download BananaCheck-v1.0.4.apk (24.2 MB)</span>
-            </motion.a>
-
-            {/* SHA-256 Verification Hash */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '10px 14px',
-              borderRadius: '10px',
-              background: 'rgba(255, 255, 255, 0.04)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              fontSize: '0.74rem'
-            }}>
-              <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginRight: '10px' }}>
-                <span style={{ color: '#94A3B8' }}>SHA-256: </span>
-                <span style={{ color: '#34D399', fontFamily: 'var(--font-mono)' }}>{shaHash.slice(0, 24)}...</span>
+              <QrCode value={ready ? ready.url : RELEASES_URL} />
+              <div>
+                <p className="modal__qr-title">Scan with your phone</p>
+                <p className="modal__qr-text">
+                  {ready
+                    ? 'The APK downloads straight to the phone. Open it to install — Android asks once to allow installs from your browser.'
+                    : 'The first public build is being finalised. Scan to follow releases on GitHub and grab it the day it lands.'}
+                </p>
               </div>
+            </motion.div>
 
-              <button
-                onClick={copyHash}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  color: copied ? '#34D399' : '#CBD5E1',
-                  fontWeight: 600,
-                  cursor: 'pointer'
-                }}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.26, duration: 0.6, ease: EASE_OUT }}
+            >
+              {ready ? (
+                <motion.a
+                  href={ready.url}
+                  download={ready.apk.file}
+                  type="application/vnd.android.package-archive"
+                  className="btn btn--sticker modal__download"
+                  {...trigger}
+                >
+                  <DownloadIcon size={20} />
+                  Download Bananalyze v{ready.apk.version}
+                </motion.a>
+              ) : (
+                <motion.a
+                  href={RELEASES_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn--sticker modal__download"
+                  {...trigger}
+                >
+                  <GithubIcon size={18} />
+                  Follow releases on GitHub
+                  <span className="visually-hidden"> (opens in a new tab)</span>
+                </motion.a>
+              )}
+            </motion.div>
+
+            {ready && (
+              <motion.div
+                className="modal__hash"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.34, duration: 0.6 }}
               >
-                {copied ? <Check size={14} /> : <Copy size={14} />}
-                <span>{copied ? 'Copied' : 'Copy'}</span>
-              </button>
-            </div>
+                <span className="modal__hash-icon" aria-hidden="true">
+                  <LockIcon size={16} play={copied} />
+                </span>
+                <span className="mono modal__hash-text">
+                  SHA-256 <span>{ready.apk.sha256.slice(0, 20)}…</span>
+                </span>
+                <motion.button className="modal__copy mono" onClick={copyHash} {...trigger}>
+                  {copied ? <CheckIcon size={14} /> : <CopyIcon size={14} />}
+                  {copied ? 'Copied' : 'Copy'}
+                </motion.button>
+              </motion.div>
+            )}
           </motion.div>
         </div>
       )}

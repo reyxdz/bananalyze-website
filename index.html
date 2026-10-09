@@ -2,26 +2,39 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="64x64" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    
-    <!-- Primary Meta Tags -->
-    <title>Banana Check • Offline On-Device Banana Variety & Ripeness Classifier</title>
-    <meta name="title" content="Banana Check • Offline On-Device Banana Variety & Ripeness Classifier" />
-    <meta name="description" content="Instant edge-AI banana variety and ripeness classifier for farmers and produce vendors. 100% offline TensorFlow Lite inference on Flutter in under 45ms." />
-    <meta name="keywords" content="banana classifier, Flutter, TensorFlow Lite, edge AI, offline machine learning, agriculture tech, Lakatan, Saba, Latundan, Cavendish, fruit ripeness classification" />
-    <meta name="theme-color" content="#1B5E20" />
 
-    <!-- Open Graph / Social -->
+    <title>Bananalyze — banana variety and ripeness, offline</title>
+    <meta name="description" content="Bananalyze tells Saba, Cardaba, Cavendish, Señorita, Latundan and Lakatan bananas apart and says whether they are unripe, ripe or overripe. Every scan runs on an Android phone, with no signal needed." />
+    <meta name="keywords" content="Bananalyze, banana classifier, banana ripeness, Saba, Cardaba, Cavendish, Señorita, Latundan, Lakatan, offline, TensorFlow Lite, Flutter, agriculture" />
+    <meta name="theme-color" content="#ECEEE4" />
+    <meta name="color-scheme" content="light dark" />
+    <script>
+      (function () {
+        var theme;
+        try {
+          theme = localStorage.getItem('bananalyze-theme');
+        } catch (e) {}
+        if (theme !== 'light' && theme !== 'dark') {
+          theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        document.documentElement.dataset.theme = theme;
+        if (theme === 'dark') {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0B100D');
+        }
+      })();
+    </script>
+
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="Banana Check • Offline Banana Variety & Ripeness Classifier" />
-    <meta property="og:description" content="Zero cloud required. Offline on-device TensorFlow Lite classification for agricultural growers and merchants." />
-    <meta property="og:image" content="/assets/hero_scan.jpg" />
+    <meta property="og:title" content="Bananalyze — banana variety and ripeness, offline" />
+    <meta property="og:description" content="Point the phone at one banana. Get the variety and whether it is unripe, ripe or overripe, with no signal." />
+    <meta property="og:image" content="/assets/hero_bunch.jpg" />
 
-    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Martian+Mono:wdth,wght@75..112.5,300..700&display=swap" rel="stylesheet" />
   </head>
   <body>
     <div id="root"></div>

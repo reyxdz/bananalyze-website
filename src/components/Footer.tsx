@@ -1,258 +1,125 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ArrowUp, Heart, Terminal, FileText, Shield } from 'lucide-react';
+import elitesWordmark from '../assets/elites-wordmark.webp';
 import { GithubIcon } from './GithubIcon';
-import { AnimatedBananaIcon } from './AnimatedIcons';
-import { sound } from '../utils/audio';
+import { GlitchImage } from './GlitchImage';
+import { ArrowIcon, DownloadIcon } from './AnimatedIcons';
+import { EASE_OUT, useIconTrigger } from '../lib/motion';
+import { scrollToId, scrollToTop } from '../lib/smoothScroll';
+import { MaskText, Reveal } from './Reveal';
+import './Footer.css';
 
-export const Footer: React.FC = () => {
-  const scrollToTop = () => {
-    sound.playTap();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+const SECTIONS = [
+  { id: 'simulator', label: 'Try the scanner' },
+  { id: 'ripeness', label: 'Ripeness' },
+  { id: 'varieties', label: 'Varieties' },
+  { id: 'offline', label: 'Why offline' },
+  { id: 'field-ux', label: 'Field design' },
+  { id: 'architecture', label: 'How it works' }
+];
+
+const PROJECT = [
+  { href: 'https://github.com/reyxdz/bananaCheck', label: 'Source code' },
+  { href: 'https://github.com/reyxdz/bananaCheck/blob/main/PROJECT_PLAN.md', label: 'Project plan' },
+  { href: 'https://github.com/reyxdz/bananaCheck/blob/main/docs/UI_GUIDELINES.md', label: 'Field UI guidelines' },
+  { href: 'https://github.com/reyxdz/bananaCheck/releases', label: 'Releases & changelog' }
+];
+
+export const Footer: React.FC<{ openDownloadModal: () => void }> = ({ openDownloadModal }) => {
+  const trigger = useIconTrigger();
 
   return (
-    <footer style={{
-      position: 'relative',
-      padding: '80px 0 40px',
-      background: 'rgba(5, 8, 6, 0.95)',
-      borderTop: '1px solid var(--border-subtle)'
-    }}>
+    <footer className="foot on-stalk">
       <div className="container">
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-          gap: '40px',
-          marginBottom: '60px'
-        }}>
-          {/* Brand Info */}
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-              <div style={{
-                width: '40px',
-                height: '40px',
-                borderRadius: '12px',
-                background: '#1B5E20',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                border: '1px solid #34D399'
-              }}>
-                <AnimatedBananaIcon size={24} />
-              </div>
-              <span style={{
-                fontFamily: 'var(--font-heading)',
-                fontSize: '1.35rem',
-                fontWeight: 800,
-                color: '#FFFFFF'
-              }}>
-                banana<span style={{ color: '#FBBF24' }}>Check</span>
-              </span>
-            </div>
+        <div className="foot__cta">
+          <MaskText className="h2 foot__cta-title" text="Take it to the field." />
+          <Reveal className="foot__cta-actions" delay={0.2}>
+            <motion.button
+              className="btn btn--sticker"
+              onClick={openDownloadModal}
+              {...trigger}
+            >
+              <DownloadIcon size={20} />
+              Download the APK
+            </motion.button>
+            <a
+              className="btn btn--ghost"
+              href="https://github.com/reyxdz/bananaCheck"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <GithubIcon size={18} />
+              View the source
+            </a>
+          </Reveal>
+        </div>
 
-            <p style={{ fontSize: '0.88rem', color: '#94A3B8', lineHeight: 1.6, marginBottom: '20px' }}>
-              Offline edge-AI application for banana variety and ripeness classification using on-device TensorFlow Lite on Flutter.
-              Built for farmers, produce sorters, and agricultural traders.
-            </p>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{
-                fontSize: '0.72rem',
-                fontFamily: 'var(--font-mono)',
-                padding: '4px 10px',
-                borderRadius: '6px',
-                background: 'rgba(52, 211, 153, 0.15)',
-                color: '#34D399',
-                border: '1px solid rgba(52, 211, 153, 0.3)'
-              }}>
-                ZERO CLOUD
-              </span>
-              <span style={{
-                fontSize: '0.72rem',
-                fontFamily: 'var(--font-mono)',
-                padding: '4px 10px',
-                borderRadius: '6px',
-                background: 'rgba(251, 191, 36, 0.15)',
-                color: '#FBBF24',
-                border: '1px solid rgba(251, 191, 36, 0.3)'
-              }}>
-                38ms TFLITE
-              </span>
-            </div>
-          </div>
-
-          {/* Quick Navigation */}
-          <div>
-            <h4 style={{
-              fontSize: '0.95rem',
-              fontWeight: 800,
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em',
-              color: '#F0FDF4',
-              marginBottom: '16px'
-            }}>
-              Showcase Sections
-            </h4>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {[
-                { label: 'Interactive Phone Simulator', href: '#simulator' },
-                { label: 'Ripeness Transformation Matrix', href: '#ripeness' },
-                { label: 'Philippine Varieties Guide', href: '#varieties' },
-                { label: 'Why On-Device Edge AI Matters', href: '#offline' },
-                { label: 'Field-First 2-Tap UX Mandate', href: '#field-ux' },
-                { label: 'Monorepo Architecture Specs', href: '#architecture' }
-              ].map((link) => (
-                <li key={link.label}>
+        <div className="foot__cols">
+          <p className="foot__about">
+            Offline banana variety and ripeness checks for farmers, vendors and anyone who buys bananas. Built with
+            Flutter and TensorFlow Lite in the Philippines.
+          </p>
+          <nav aria-label="Sections">
+            <p className="mono foot__h">On this page</p>
+            <ul>
+              {SECTIONS.map((s) => (
+                <li key={s.id}>
                   <a
-                    href={link.href}
-                    onClick={() => sound.playTap()}
-                    style={{
-                      fontSize: '0.86rem',
-                      color: '#94A3B8',
-                      transition: 'color var(--transition-fast)'
+                    href={`#${s.id}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      scrollToId(s.id);
                     }}
-                    onMouseEnter={(e) => (e.currentTarget.style.color = '#34D399')}
-                    onMouseLeave={(e) => (e.currentTarget.style.color = '#94A3B8')}
                   >
-                    {link.label}
+                    {s.label}
                   </a>
                 </li>
               ))}
             </ul>
-          </div>
-
-          {/* Repository & Open Source */}
-          <div>
-            <h4 style={{
-              fontSize: '0.95rem',
-              fontWeight: 800,
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em',
-              color: '#F0FDF4',
-              marginBottom: '16px'
-            }}>
-              Open Source Monorepo
-            </h4>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <li>
-                <a
-                  href="https://github.com/reyxdz/bananaCheck"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    fontSize: '0.86rem',
-                    color: '#94A3B8'
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = '#34D399')}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = '#94A3B8')}
-                >
-                  <GithubIcon size={16} />
-                  <span>GitHub Repository: reyxdz/bananaCheck</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://github.com/reyxdz/bananaCheck/blob/main/PROJECT_PLAN.md"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    fontSize: '0.86rem',
-                    color: '#94A3B8'
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = '#34D399')}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = '#94A3B8')}
-                >
-                  <FileText size={16} />
-                  <span>PROJECT_PLAN.md Specifications</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://github.com/reyxdz/bananaCheck/blob/main/docs/UI_GUIDELINES.md"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    fontSize: '0.86rem',
-                    color: '#94A3B8'
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = '#34D399')}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = '#94A3B8')}
-                >
-                  <Shield size={16} />
-                  <span>Field UI Guidelines (docs/UI_GUIDELINES.md)</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://github.com/reyxdz/bananaCheck/releases"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    fontSize: '0.86rem',
-                    color: '#94A3B8'
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = '#34D399')}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = '#94A3B8')}
-                >
-                  <Terminal size={16} />
-                  <span>Releases &amp; Changelog</span>
-                </a>
-              </li>
+          </nav>
+          <nav aria-label="Project">
+            <p className="mono foot__h">Project</p>
+            <ul>
+              {PROJECT.map((p) => (
+                <li key={p.href}>
+                  <a href={p.href} target="_blank" rel="noopener noreferrer">
+                    {p.label}
+                  </a>
+                </li>
+              ))}
             </ul>
-          </div>
+          </nav>
         </div>
 
-        {/* Bottom Bar */}
-        <div style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '16px',
-          paddingTop: '28px',
-          borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-          fontSize: '0.82rem',
-          color: '#64748B'
-        }}>
-          <div>
-            <span>© 2026 Banana Check • Developed for Philippine Agriculture &amp; Smallholders.</span>
-          </div>
+        <motion.div
+          className="foot__mark"
+          aria-hidden="true"
+          initial="hidden"
+          whileInView="shown"
+          viewport={{ once: true, amount: 0.6 }}
+        >
+          <motion.span
+            variants={{ hidden: { y: '100%' }, shown: { y: '0%' } }}
+            transition={{ duration: 1.3, ease: EASE_OUT }}
+          >
+            banana<b>lyze</b>
+          </motion.span>
+        </motion.div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-            <span>Flutter 3.22.3 • Dart 3.4.4 • Python 3.11</span>
-
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={scrollToTop}
-              title="Back to Top"
-              style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '10px',
-                background: 'rgba(255, 255, 255, 0.08)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#34D399',
-                cursor: 'pointer'
-              }}
-            >
-              <ArrowUp size={16} />
-            </motion.button>
-          </div>
+        <div className="foot__bar mono">
+          <span>© 2026 Bananalyze · Made for Philippine farmers and vendors</span>
+          <span>Flutter 3.22.3 · TensorFlow Lite · MobileNetV2</span>
+          <span className="foot__credit">
+            Developed and maintained by
+            <a className="foot__elites" href="https://elitesys.org" target="_blank" rel="noopener noreferrer">
+              <GlitchImage src={elitesWordmark} alt="Elites" width={229} height={48} />
+              <span className="visually-hidden"> (opens in a new tab)</span>
+            </a>
+          </span>
+          <motion.button className="foot__top" onClick={scrollToTop} aria-label="Back to top" {...trigger}>
+            Back to top
+            <ArrowIcon direction="up" size={16} />
+          </motion.button>
         </div>
       </div>
     </footer>

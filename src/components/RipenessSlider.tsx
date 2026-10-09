@@ -1,437 +1,246 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Sparkles, Utensils, HeartPulse, ShieldCheck, Thermometer } from 'lucide-react';
-import { sound } from '../utils/audio';
-import { AnimatedLeafIcon } from './AnimatedIcons';
+import React, { useRef, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { RIPENESS_LEVELS, VARIETIES, type Ripeness, type RipenessLevel } from '../data/bananaData';
+import { EASE_OUT, useIconTrigger } from '../lib/motion';
+import { LeafIcon, ThermometerIcon } from './AnimatedIcons';
+import { MaskText, Reveal } from './Reveal';
+import './RipenessSlider.css';
 
-interface RipenessStageData {
-  stage: number;
-  label: string;
-  classificationGroup: 'Unripe' | 'Ripe' | 'Overripe';
-  color: string;
-  image: string;
-  starchPct: number;
-  sugarPct: number;
-  glycemicIndex: number;
-  antioxidantScore: number; // 1-100
-  culinaryUse: string;
-  biologicalProfile: string;
-  fieldAdvice: string;
-}
-
-const RIPENESS_STAGES: RipenessStageData[] = [
-  {
-    stage: 1,
-    label: 'All Green',
-    classificationGroup: 'Unripe',
-    color: '#65A30D',
-    image: '/assets/ripeness_unripe.jpg',
-    starchPct: 88,
-    sugarPct: 3,
-    glycemicIndex: 30,
-    antioxidantScore: 25,
-    culinaryUse: 'Crispy deep-fried banana chips, Saba boiling with salt, savory meat stews (Pochero).',
-    biologicalProfile: 'Maximum prebiotic resistant starch. Feeds healthy gut microbiome bacteria.',
-    fieldAdvice: 'Optimal stage for long-distance maritime export shipping; lowest ethylene emission.'
-  },
-  {
-    stage: 2,
-    label: 'Green with Yellow Trace',
-    classificationGroup: 'Unripe',
-    color: '#84CC16',
-    image: '/assets/ripeness_unripe.jpg',
-    starchPct: 76,
-    sugarPct: 12,
-    glycemicIndex: 38,
-    antioxidantScore: 35,
-    culinaryUse: 'Ginataan, Saba Nilaga, boiling as rice substitute for diabetic meal planning.',
-    biologicalProfile: 'High fiber structure; enzyme amylase starts breaking polysaccharides into maltose.',
-    fieldAdvice: 'Handle gently during harvesting to avoid latex staining on the peel.'
-  },
-  {
-    stage: 3,
-    label: 'More Green Than Yellow',
-    classificationGroup: 'Unripe',
-    color: '#A3E635',
-    image: '/assets/ripeness_unripe.jpg',
-    starchPct: 62,
-    sugarPct: 24,
-    glycemicIndex: 44,
-    antioxidantScore: 48,
-    culinaryUse: 'Firm cooking, shallow pan-frying, savory curry thickening.',
-    biologicalProfile: 'Chlorophyll breakdown begins; carotenoid pigment synthesis accelerates.',
-    fieldAdvice: 'Store in shaded packing shed at 13°C. Protect from direct midday heat.'
-  },
-  {
-    stage: 4,
-    label: 'More Yellow Than Green',
-    classificationGroup: 'Ripe',
-    color: '#FACC15',
-    image: '/assets/ripeness_ripe.jpg',
-    starchPct: 40,
-    sugarPct: 45,
-    glycemicIndex: 51,
-    antioxidantScore: 65,
-    culinaryUse: 'Mild table fruit, fruit salads, oatmeal toppings, and light smoothies.',
-    biologicalProfile: 'Balanced starch-to-sugar ratio with pleasant semi-firm mouthfeel.',
-    fieldAdvice: 'Target distribution stage for wholesale wet markets and supermarket shelves.'
-  },
-  {
-    stage: 5,
-    label: 'Yellow with Green Tips',
-    classificationGroup: 'Ripe',
-    color: '#FBBF24',
-    image: '/assets/ripeness_ripe.jpg',
-    starchPct: 22,
-    sugarPct: 64,
-    glycemicIndex: 56,
-    antioxidantScore: 78,
-    culinaryUse: 'The quintessential eating banana. Peak potassium bio-availability & aroma.',
-    biologicalProfile: 'Tannins completely neutralized; aromatic esters (isoamyl acetate) at zenith.',
-    fieldAdvice: 'High consumer demand; sells at peak retail market price per kilogram.'
-  },
-  {
-    stage: 6,
-    label: 'All Golden Yellow',
-    classificationGroup: 'Ripe',
-    color: '#F59E0B',
-    image: '/assets/ripeness_ripe.jpg',
-    starchPct: 8,
-    sugarPct: 78,
-    glycemicIndex: 62,
-    antioxidantScore: 88,
-    culinaryUse: 'Table snacking, creamy fruit shakes, Turon, Banana Cue, and halo-halo toppings.',
-    biologicalProfile: 'Nearly full starch conversion into easily digestible glucose and fructose.',
-    fieldAdvice: 'Rapid inventory turnover needed; 2 to 3 days remaining before sugar freckling.'
-  },
-  {
-    stage: 7,
-    label: 'Yellow with Sugar Freckles',
-    classificationGroup: 'Overripe',
-    color: '#D97706',
-    image: '/assets/variety_latundan.jpg',
-    starchPct: 4,
-    sugarPct: 86,
-    glycemicIndex: 68,
-    antioxidantScore: 98,
-    culinaryUse: 'Decadent baked banana bread, banana cue, Maruya fritters, pancakes, natural baby puree.',
-    biologicalProfile: 'Peak antioxidant and TNF (Tumor Necrosis Factor) cytokine-stimulating activity.',
-    fieldAdvice: 'Divert immediately from fresh table retail to bakeries and confectionery processing.'
-  }
+const FRECKLES = [
+  [30, 43, 1.7],
+  [41, 48, 1.2],
+  [52, 44, 1.9],
+  [63, 50, 1.3],
+  [72, 45, 1.6],
+  [84, 44, 1.2],
+  [94, 39, 1.5],
+  [47, 52, 1],
+  [36, 38, 1.1],
+  [78, 51, 1]
 ];
 
-export const RipenessSlider: React.FC = () => {
-  const [activeStageIdx, setActiveStageIdx] = useState<number>(4); // Default to Stage 5
-  const currentStage = RIPENESS_STAGES[activeStageIdx];
+const STEM: Record<Ripeness, string> = { Unripe: '#4C6B24', Ripe: '#6F6A2A', Overripe: '#5E4A1E' };
 
-  const handleStageSelect = (idx: number) => {
-    sound.playTap();
-    setActiveStageIdx(idx);
+const dishesFor = (kind: 'Cooking banana' | 'Dessert banana', level: Ripeness) => [
+  ...new Set(VARIETIES.filter((v) => v.kind === kind).flatMap((v) => v.dishes[level]))
+].slice(0, 4);
+
+const BananaGlyph: React.FC<{ level: RipenessLevel }> = ({ level }) => (
+  <svg viewBox="0 0 120 64" className="glyph" aria-hidden="true">
+    <motion.path
+      d="M11 22L4.5 11.5"
+      strokeWidth="5"
+      strokeLinecap="round"
+      initial={false}
+      animate={{ stroke: STEM[level.id] }}
+      transition={{ duration: 0.6 }}
+    />
+    <motion.path
+      d="M12 20C34 40 82 42 108 22c3-2 7 0 4 5C90 62 30 62 9 24c-1-2 1-5 3-4z"
+      initial={false}
+      animate={{ fill: level.color }}
+      transition={{ duration: 0.6 }}
+      stroke="rgba(15,34,25,0.55)"
+      strokeWidth="1.2"
+    />
+    <path d="M16 27c22 17 66 19 90 1" stroke="rgba(255,255,255,0.4)" strokeWidth="1.6" fill="none" strokeLinecap="round" />
+    <circle cx="111.4" cy="25.2" r="2.4" fill="#2E2410" />
+    {level.id === 'Overripe' &&
+      FRECKLES.map(([cx, cy, r], i) => (
+        <motion.circle
+          key={i}
+          cx={cx}
+          cy={cy}
+          r={r}
+          fill="var(--fleck)"
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 0.85 }}
+          transition={{ delay: 0.15 + i * 0.03, type: 'spring', stiffness: 500, damping: 20 }}
+        />
+      ))}
+  </svg>
+);
+
+const DishList: React.FC<{ title: string; dishes: string[] }> = ({ title, dishes }) => (
+  <div className="ripe__dishes">
+    <p className="mono">{title}</p>
+    {dishes.length ? (
+      <ul>
+        {dishes.map((d) => (
+          <li key={d}>{d}</li>
+        ))}
+      </ul>
+    ) : (
+      <p className="ripe__wait">Let it ripen first</p>
+    )}
+  </div>
+);
+
+export const RipenessSlider: React.FC = () => {
+  const [idx, setIdx] = useState(1);
+  const level = RIPENESS_LEVELS[idx];
+  const trigger = useIconTrigger();
+  const buttonsRef = useRef<(HTMLButtonElement | null)[]>([]);
+
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    const delta = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 0;
+    if (!delta) return;
+    e.preventDefault();
+    const next = Math.min(RIPENESS_LEVELS.length - 1, Math.max(0, idx + delta));
+    setIdx(next);
+    buttonsRef.current[next]?.focus();
   };
 
   return (
-    <section id="ripeness" style={{
-      position: 'relative',
-      padding: '100px 0',
-      borderTop: '1px solid var(--border-subtle)',
-      borderBottom: '1px solid var(--border-subtle)',
-      background: 'rgba(9, 15, 10, 0.6)'
-    }}>
+    <section id="ripeness" className="section ripe">
       <div className="container">
-        {/* Section Heading */}
-        <div style={{ textAlign: 'center', maxWidth: '780px', margin: '0 auto 50px' }}>
-          <div className="glass-pill" style={{ marginBottom: '14px' }}>
-            <AnimatedLeafIcon size={18} />
-            <span style={{ color: '#FBBF24', fontWeight: 700 }}>PHYSIOLOGICAL RIPENESS MATRIX</span>
-          </div>
-
-          <h2 style={{
-            fontSize: 'clamp(2rem, 4vw, 3.2rem)',
-            fontWeight: 800,
-            marginBottom: '16px',
-            letterSpacing: '-0.03em'
-          }}>
-            Dynamic Ripeness <span className="gradient-text-emerald">Science &amp; Grading</span>
-          </h2>
-
-          <p style={{ fontSize: '1.08rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-            Banana Check’s quantized model evaluates color histograms, peel texture, and curvature to map specimens
-            into 3 primary operational classes and 7 physiological maturity stages. Drag the slider to observe nutritional shifts.
-          </p>
+        <div className="section-head">
+          <p className="label">Ripeness</p>
+          <MaskText className="h2" text="Three answers, read straight from the peel." />
+          <Reveal delay={0.15}>
+            <p className="lede">
+              Every scan ends in one of three words: unripe, ripe or overripe. Each one comes with a handling tip and
+              food ideas, the same ones the app shows. Pick a level to see them.
+            </p>
+          </Reveal>
         </div>
 
-        {/* Interactive Slider Controller */}
-        <div style={{
-          maxWidth: '880px',
-          margin: '0 auto 50px',
-          padding: '24px 30px',
-          borderRadius: '24px',
-          background: 'var(--bg-card)',
-          border: '1px solid var(--border-subtle)',
-          boxShadow: 'var(--shadow-md)'
-        }}>
-          {/* Top Label */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '20px'
-          }}>
-            <span style={{
-              fontSize: '0.88rem',
-              fontWeight: 700,
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em',
-              color: 'var(--text-muted)'
-            }}>
-              Harvest Maturity Index
-            </span>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '6px 14px',
-              borderRadius: '999px',
-              background: 'rgba(255, 255, 255, 0.08)',
-              border: `1px solid ${currentStage.color}`
-            }}>
-              <span style={{
-                width: '8px',
-                height: '8px',
-                borderRadius: '50%',
-                backgroundColor: currentStage.color,
-                boxShadow: `0 0 10px ${currentStage.color}`
-              }} />
-              <span style={{ fontWeight: 800, fontSize: '0.9rem', color: currentStage.color }}>
-                Stage {currentStage.stage}: {currentStage.label} ({currentStage.classificationGroup})
-              </span>
-            </div>
-          </div>
-
-          {/* Stepped Buttons / Interactive Track */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(7, 1fr)',
-            gap: '8px',
-            marginBottom: '16px'
-          }}>
-            {RIPENESS_STAGES.map((s, idx) => {
-              const isSelected = idx === activeStageIdx;
+        <Reveal className="chart" amount={0.3}>
+          <div className="chart__row" role="radiogroup" aria-label="Ripeness level" onKeyDown={onKeyDown}>
+            {RIPENESS_LEVELS.map((l, i) => {
+              const isActive = i === idx;
               return (
-                <motion.button
-                  key={s.stage}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => handleStageSelect(idx)}
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    padding: '12px 6px',
-                    borderRadius: '12px',
-                    background: isSelected ? s.color : 'rgba(255, 255, 255, 0.05)',
-                    color: isSelected ? '#000000' : 'var(--text-secondary)',
-                    fontWeight: 800,
-                    cursor: 'pointer',
-                    border: isSelected ? '2px solid #FFFFFF' : '1px solid rgba(255, 255, 255, 0.08)',
-                    boxShadow: isSelected ? `0 0 20px ${s.color}` : 'none',
-                    transition: 'background-color 0.2s ease, color 0.2s ease'
+                <button
+                  key={l.id}
+                  ref={(el) => {
+                    buttonsRef.current[i] = el;
                   }}
+                  role="radio"
+                  aria-checked={isActive}
+                  tabIndex={isActive ? 0 : -1}
+                  className={`chart__item ${isActive ? 'is-active' : ''}`}
+                  onClick={() => setIdx(i)}
                 >
-                  <span style={{ fontSize: '0.74rem', opacity: isSelected ? 0.9 : 0.6 }}>S{s.stage}</span>
-                  <span style={{ fontSize: '0.85rem' }}>{s.label.split(' ')[0]}</span>
-                </motion.button>
+                  <motion.span
+                    className="chart__glyph"
+                    animate={{ y: isActive ? -10 : 0, rotate: isActive ? -6 : 0, scale: isActive ? 1.06 : 1 }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                  >
+                    <BananaGlyph level={l} />
+                  </motion.span>
+                  <span className="chart__num">{l.id}</span>
+                  <span className="chart__name">{l.peel}</span>
+                  {isActive && (
+                    <motion.span
+                      layoutId="stage-bracket"
+                      className="chart__bracket"
+                      transition={{ type: 'spring', stiffness: 380, damping: 34 }}
+                    />
+                  )}
+                </button>
               );
             })}
           </div>
+        </Reveal>
 
-          {/* Range Slider for smooth scrubbing */}
-          <input
-            type="range"
-            min="0"
-            max="6"
-            value={activeStageIdx}
-            onChange={(e) => handleStageSelect(parseInt(e.target.value))}
-            style={{
-              width: '100%',
-              accentColor: currentStage.color,
-              cursor: 'pointer'
-            }}
-          />
-        </div>
+        <div className="ripe__detail">
+          <Reveal className="ripe__photo">
+            <AnimatePresence initial={false}>
+              <motion.img
+                key={level.image}
+                src={level.image}
+                alt={`${level.id} bananas`}
+                initial={{ opacity: 0, scale: 1.08 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.9, ease: EASE_OUT }}
+              />
+            </AnimatePresence>
+            <span className="ripe__photo-chip chip">
+              <span className="stage-dot" style={{ background: level.color }} />
+              {level.id}
+            </span>
+          </Reveal>
 
-        {/* Stage In-Depth Analytical Card */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-          gap: '32px',
-          alignItems: 'stretch'
-        }}>
-          {/* Left: Specimen Snapshot */}
-          <div className="glass-panel" style={{
-            padding: '24px',
-            borderRadius: '24px',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between'
-          }}>
-            <div>
-              <div style={{
-                position: 'relative',
-                borderRadius: '18px',
-                overflow: 'hidden',
-                height: '240px',
-                marginBottom: '18px'
-              }}>
-                <img
-                  src={currentStage.image}
-                  alt={currentStage.label}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-                <span style={{
-                  position: 'absolute',
-                  top: '12px',
-                  left: '12px',
-                  fontSize: '0.75rem',
-                  fontWeight: 800,
-                  padding: '4px 10px',
-                  borderRadius: '6px',
-                  background: currentStage.color,
-                  color: '#000000',
-                  boxShadow: '0 4px 10px rgba(0,0,0,0.3)'
-                }}>
-                  {currentStage.classificationGroup.toUpperCase()} GRADING
-                </span>
-              </div>
-
-              <h3 style={{
-                fontSize: '1.4rem',
-                fontWeight: 800,
-                color: 'var(--text-primary)',
-                marginBottom: '6px'
-              }}>
-                Stage {currentStage.stage}: {currentStage.label}
-              </h3>
-
-              <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.55 }}>
-                {currentStage.biologicalProfile}
-              </p>
-            </div>
-
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              padding: '12px 14px',
-              borderRadius: '12px',
-              background: 'rgba(255, 255, 255, 0.04)',
-              border: '1px solid var(--border-subtle)',
-              marginTop: '16px'
-            }}>
-              <Thermometer size={18} color="#FBBF24" />
-              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                <strong>Agronomic Guidance:</strong> {currentStage.fieldAdvice}
-              </div>
-            </div>
-          </div>
-
-          {/* Right: Real-time Biochemical Transformation Metrics */}
-          <div className="glass-panel" style={{
-            padding: '28px',
-            borderRadius: '24px',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between'
-          }}>
-            <div>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                fontWeight: 700,
-                fontSize: '0.88rem',
-                color: '#34D399',
-                textTransform: 'uppercase',
-                letterSpacing: '0.04em',
-                marginBottom: '18px'
-              }}>
-                <HeartPulse size={18} />
-                <span>Nutritional &amp; Chemical Transformation</span>
-              </div>
-
-              {/* Progress Bars Grid */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
-                {/* Resistant Starch */}
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px' }}>
-                    <span>Resistant Starch (Prebiotic fiber)</span>
-                    <span style={{ color: '#84CC16', fontFamily: 'var(--font-mono)' }}>{currentStage.starchPct}%</span>
-                  </div>
-                  <div style={{ width: '100%', height: '8px', borderRadius: '4px', background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
-                    <motion.div
-                      animate={{ width: `${currentStage.starchPct}%` }}
-                      transition={{ duration: 0.4 }}
-                      style={{ height: '100%', background: '#84CC16' }}
-                    />
-                  </div>
-                </div>
-
-                {/* Natural Fructose / Sugars */}
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px' }}>
-                    <span>Free Sugars (Fructose &amp; Glucose)</span>
-                    <span style={{ color: '#F59E0B', fontFamily: 'var(--font-mono)' }}>{currentStage.sugarPct}%</span>
-                  </div>
-                  <div style={{ width: '100%', height: '8px', borderRadius: '4px', background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
-                    <motion.div
-                      animate={{ width: `${currentStage.sugarPct}%` }}
-                      transition={{ duration: 0.4 }}
-                      style={{ height: '100%', background: '#F59E0B' }}
-                    />
-                  </div>
-                </div>
-
-                {/* Antioxidant Index */}
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px' }}>
-                    <span>Antioxidant &amp; Polyphenol Activity</span>
-                    <span style={{ color: '#EC4899', fontFamily: 'var(--font-mono)' }}>{currentStage.antioxidantScore} / 100</span>
-                  </div>
-                  <div style={{ width: '100%', height: '8px', borderRadius: '4px', background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
-                    <motion.div
-                      animate={{ width: `${currentStage.antioxidantScore}%` }}
-                      transition={{ duration: 0.4 }}
-                      style={{ height: '100%', background: '#EC4899' }}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Culinary & Market Fit */}
-              <div style={{
-                padding: '16px',
-                borderRadius: '16px',
-                background: 'rgba(245, 158, 11, 0.1)',
-                border: '1px solid rgba(245, 158, 11, 0.25)'
-              }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  fontWeight: 800,
-                  fontSize: '0.88rem',
-                  color: '#FBBF24',
-                  marginBottom: '6px'
-                }}>
-                  <Utensils size={16} />
-                  <span>Culinary &amp; Commercial Processing Destination:</span>
-                </div>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-primary)', margin: 0, lineHeight: 1.5 }}>
-                  {currentStage.culinaryUse}
+          <Reveal className="ripe__text" delay={0.08}>
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={level.id}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.45, ease: EASE_OUT }}
+              >
+                <p className="ripe__stage-num">
+                  The app says <span>{level.id}</span>
                 </p>
-              </div>
+                <h3 className="h3 ripe__stage-label">{level.summary}.</h3>
+
+                <motion.div className="ripe__note" {...trigger}>
+                  <span className="ripe__note-icon">
+                    <ThermometerIcon size={22} />
+                  </span>
+                  <div>
+                    <p className="mono">Handling tip</p>
+                    <p>{level.handlingTip}</p>
+                  </div>
+                </motion.div>
+                <motion.div className="ripe__note" {...trigger}>
+                  <span className="ripe__note-icon">
+                    <LeafIcon size={22} />
+                  </span>
+                  <div>
+                    <p className="mono">Health notes</p>
+                    {level.health.map((h) => (
+                      <p key={h}>{h}.</p>
+                    ))}
+                  </div>
+                </motion.div>
+              </motion.div>
+            </AnimatePresence>
+          </Reveal>
+
+          <Reveal className="ripe__comp" delay={0.16}>
+            <p className="mono ripe__comp-title">Starch turning to sugar</p>
+            <div className="scale" role="img" aria-label={`${level.id}: ${level.summary}`}>
+              <motion.span
+                className="scale__fill"
+                initial={false}
+                animate={{ width: `${level.sweetness * 100}%`, backgroundColor: level.color }}
+                transition={{ type: 'spring', stiffness: 120, damping: 22 }}
+              />
+              <motion.span
+                className="scale__pin"
+                initial={false}
+                animate={{ left: `${level.sweetness * 100}%` }}
+                transition={{ type: 'spring', stiffness: 120, damping: 22 }}
+              />
             </div>
-          </div>
+            <div className="scale__legend mono">
+              <span>More starch</span>
+              <span>More sugar</span>
+            </div>
+
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={level.id}
+                className="ripe__comp-body"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.35, ease: EASE_OUT }}
+              >
+                <div className="ripe__look">
+                  <p className="mono">What to look for</p>
+                  <p>{level.peel}</p>
+                </div>
+                <div className="ripe__uses">
+                  <DishList title="Cooking bananas" dishes={dishesFor('Cooking banana', level.id)} />
+                  <DishList title="Dessert bananas" dishes={dishesFor('Dessert banana', level.id)} />
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          </Reveal>
         </div>
       </div>
     </section>

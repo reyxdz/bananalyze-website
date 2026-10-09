@@ -1,0 +1,131 @@
+/* Offsets are a share of the image's own width, not em: on a 16px logo an em
+   offset moves it less than a pixel. */
+
+.glitch {
+  --glitch-a: var(--s5);
+  --glitch-b: #F7F8F2;
+  position: relative;
+  display: inline-block;
+}
+
+.glitch__base {
+  display: block;
+  height: 100%;
+  width: auto;
+}
+
+.glitch__layer {
+  position: absolute;
+  inset: 0;
+  visibility: hidden;
+  pointer-events: none;
+  -webkit-mask: var(--glitch-mask) center / contain no-repeat;
+  mask: var(--glitch-mask) center / contain no-repeat;
+}
+
+.glitch__layer--a {
+  background-color: var(--glitch-a);
+}
+
+.glitch__layer--b {
+  background-color: var(--glitch-b);
+}
+
+.glitch[data-glitch] .glitch__base {
+  animation: glitch-base 0.42s steps(1) both;
+}
+
+.glitch[data-glitch] .glitch__layer {
+  visibility: visible;
+}
+
+.glitch[data-glitch] .glitch__layer--a {
+  animation: glitch-slice-a 0.42s steps(1) both;
+}
+
+.glitch[data-glitch] .glitch__layer--b {
+  animation: glitch-slice-b 0.42s steps(1) both;
+}
+
+@keyframes glitch-base {
+  0% {
+    transform: translate3d(2%, 0, 0) skewX(-6deg);
+  }
+  18% {
+    transform: translate3d(-2.5%, 0, 0);
+  }
+  36% {
+    transform: none;
+  }
+  62% {
+    transform: translate3d(1.2%, 0, 0) skewX(4deg);
+  }
+  80%,
+  100% {
+    transform: none;
+  }
+}
+
+@keyframes glitch-slice-a {
+  0% {
+    clip-path: inset(12% 0 64% 0);
+    transform: translate3d(-5%, 0, 0);
+  }
+  16% {
+    clip-path: inset(58% 0 18% 0);
+    transform: translate3d(4%, 0, 0);
+  }
+  32% {
+    clip-path: inset(30% 0 52% 0);
+    transform: translate3d(-3%, 0, 0);
+  }
+  48% {
+    clip-path: inset(76% 0 4% 0);
+    transform: translate3d(6%, 0, 0);
+  }
+  64% {
+    clip-path: inset(4% 0 84% 0);
+    transform: translate3d(-2%, 0, 0);
+  }
+  80% {
+    clip-path: inset(44% 0 40% 0);
+    transform: translate3d(3.5%, 0, 0);
+  }
+  100% {
+    clip-path: inset(100% 0 0 0);
+    transform: none;
+  }
+}
+
+@keyframes glitch-slice-b {
+  0% {
+    clip-path: inset(68% 0 14% 0);
+    transform: translate3d(4%, 0, 0);
+  }
+  20% {
+    clip-path: inset(8% 0 76% 0);
+    transform: translate3d(-4.5%, 0, 0);
+  }
+  40% {
+    clip-path: inset(40% 0 38% 0);
+    transform: translate3d(2.5%, 0, 0);
+  }
+  60% {
+    clip-path: inset(86% 0 2% 0);
+    transform: translate3d(-5%, 0, 0);
+  }
+  80% {
+    clip-path: inset(22% 0 66% 0);
+    transform: translate3d(2%, 0, 0);
+  }
+  100% {
+    clip-path: inset(100% 0 0 0);
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glitch__layer {
+    display: none;
+  }
+}

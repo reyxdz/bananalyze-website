@@ -1,0 +1,144 @@
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+
+.modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: var(--scrim);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.modal__card {
+  --icon-accent: var(--sticker);
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  padding: clamp(24px, 4vw, 36px);
+  border-radius: var(--r-xl);
+  background: var(--paper);
+  box-shadow: inset 0 0 0 1px var(--line), 0 40px 100px -30px rgba(0, 0, 0, 0.55);
+}
+
+.modal__close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+}
+
+.modal__head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding-right: 48px;
+}
+
+.modal__title {
+  font-stretch: 120%;
+  font-weight: 760;
+  font-size: 1.7rem;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+}
+
+.modal__sub {
+  color: var(--ink-3);
+  margin-top: 4px;
+}
+
+.modal__qr {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 16px;
+  border-radius: var(--r-lg);
+  background: var(--card);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.modal__qr-code {
+  width: 108px;
+  height: 108px;
+  padding: 8px;
+  border-radius: 14px;
+  background: #fff;
+  flex-shrink: 0;
+}
+
+.modal__qr-title {
+  font-weight: 640;
+  margin-bottom: 4px;
+}
+
+.modal__qr-text {
+  font-size: 0.9rem;
+  color: var(--ink-2);
+  line-height: 1.5;
+}
+
+.modal__download {
+  width: 100%;
+  margin-top: 16px;
+  white-space: normal;
+  text-align: center;
+}
+
+.modal__hash {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 10px 10px 10px 14px;
+  border-radius: 14px;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.modal__hash-icon {
+  color: var(--ink-2);
+}
+
+.modal__hash-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--ink-3);
+}
+
+.modal__hash-text span {
+  color: var(--ink);
+}
+
+.modal__copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--paper);
+  flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+  .modal {
+    place-items: end center;
+    padding: 10px;
+  }
+
+  .modal__qr {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

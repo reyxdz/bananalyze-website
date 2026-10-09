@@ -1,252 +1,74 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Target, SunMedium, Hand, MousePointerClick, ShieldCheck, CheckCircle } from 'lucide-react';
+import { EASE_OUT, useIconTrigger } from '../lib/motion';
+import { SunIcon, TapIcon, TargetIcon } from './AnimatedIcons';
+import { MaskText, Reveal } from './Reveal';
+import './FieldFirstUX.css';
+
+const RULES = [
+  {
+    Icon: TapIcon,
+    title: 'Straight to the camera',
+    body: 'A three-page welcome you can skip, then the camera. Point at a banana, tap Scan, read the answer. No sign-up, no account.',
+    proof: ['Point', 'Scan', 'Result']
+  },
+  {
+    Icon: TargetIcon,
+    title: 'Buttons for busy hands',
+    body: 'Every control is at least 48 dp. The Scan button is 80 dp and the gallery button 56 dp, easy to hit with wet or sticky fingers.',
+    proof: ['48 dp minimum', '80 dp Scan']
+  },
+  {
+    Icon: SunIcon,
+    title: 'Says when the photo is bad',
+    body: 'Live hints like "Too dark, turn on flash" appear before you scan. Ripeness is never shown by colour alone: every level has a word and an icon.',
+    proof: ['Live hints', 'Word + icon + colour']
+  }
+];
 
 export const FieldFirstUX: React.FC = () => {
+  const trigger = useIconTrigger();
+
   return (
-    <section id="field-ux" style={{
-      position: 'relative',
-      padding: '100px 0',
-      borderTop: '1px solid var(--border-subtle)'
-    }}>
+    <section id="field-ux" className="section field">
       <div className="container">
-        {/* Section Heading */}
-        <div style={{ textAlign: 'center', maxWidth: '800px', margin: '0 auto 50px' }}>
-          <div className="glass-pill" style={{ marginBottom: '14px' }}>
-            <Target size={18} color="#34D399" />
-            <span style={{ color: '#34D399', fontWeight: 700 }}>FIELD-FIRST HUMAN DESIGN</span>
-          </div>
-
-          <h2 style={{
-            fontSize: 'clamp(2rem, 4vw, 3.2rem)',
-            fontWeight: 800,
-            marginBottom: '16px',
-            letterSpacing: '-0.03em'
-          }}>
-            Engineered For Mud, Gloves, &amp; <span className="gradient-text-emerald">Noon Sun</span>
-          </h2>
-
-          <p style={{ fontSize: '1.08rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-            Most software is designed for air-conditioned offices. Banana Check was architected around the physical realities of outdoor agriculture, detailed in the project’s strict UI Guidelines.
-          </p>
+        <div className="section-head">
+          <p className="label">Field design</p>
+          <MaskText className="h2" text="Made for sap, sun and dim market stalls." />
+          <Reveal delay={0.15}>
+            <p className="lede">
+              Most software is designed at a desk. Bananalyze was designed around farms and market stalls: budget
+              phones, harsh or poor light, and hands that are busy. Every word on screen is plain language.
+            </p>
+          </Reveal>
         </div>
 
-        {/* 3 Core UI Rules Grid */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-          gap: '28px',
-          marginBottom: '50px'
-        }}>
-          {/* Rule 1: The 2-Tap Mandate */}
-          <motion.div
-            whileHover={{ y: -6 }}
-            className="glass-panel"
-            style={{
-              padding: '32px 28px',
-              borderRadius: '24px',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between'
-            }}
-          >
-            <div>
-              <div style={{
-                width: '52px',
-                height: '52px',
-                borderRadius: '16px',
-                background: 'rgba(52, 211, 153, 0.15)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#34D399',
-                marginBottom: '20px'
-              }}>
-                <MousePointerClick size={26} />
-              </div>
-
-              <div style={{
-                fontSize: '0.78rem',
-                fontWeight: 800,
-                color: '#34D399',
-                textTransform: 'uppercase',
-                letterSpacing: '0.04em',
-                marginBottom: '6px'
-              }}>
-                MANDATORY RULE §1
-              </div>
-
-              <h3 style={{
-                fontSize: '1.45rem',
-                fontWeight: 800,
-                color: 'var(--text-primary)',
-                marginBottom: '12px'
-              }}>
-                Strict 2-Tap Scan Path
-              </h3>
-
-              <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                App launch directly opens the camera viewfinder. Tapping the shutter produces the classification result.
-                <strong> No onboarding walkthroughs, no login screens, no verification popups, and no nested menus.</strong>
-              </p>
-            </div>
-
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '10px 14px',
-              borderRadius: '10px',
-              background: 'rgba(52, 211, 153, 0.08)',
-              marginTop: '20px',
-              fontSize: '0.8rem',
-              color: '#34D399',
-              fontWeight: 600
-            }}>
-              <CheckCircle size={16} />
-              <span>Tap 1: Launch App → Tap 2: Shutter Click</span>
-            </div>
-          </motion.div>
-
-          {/* Rule 2: 64dp Touch Target */}
-          <motion.div
-            whileHover={{ y: -6 }}
-            className="glass-panel"
-            style={{
-              padding: '32px 28px',
-              borderRadius: '24px',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between'
-            }}
-          >
-            <div>
-              <div style={{
-                width: '52px',
-                height: '52px',
-                borderRadius: '16px',
-                background: 'rgba(251, 191, 36, 0.15)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#FBBF24',
-                marginBottom: '20px'
-              }}>
-                <Hand size={26} />
-              </div>
-
-              <div style={{
-                fontSize: '0.78rem',
-                fontWeight: 800,
-                color: '#FBBF24',
-                textTransform: 'uppercase',
-                letterSpacing: '0.04em',
-                marginBottom: '6px'
-              }}>
-                MANDATORY RULE §2
-              </div>
-
-              <h3 style={{
-                fontSize: '1.45rem',
-                fontWeight: 800,
-                color: 'var(--text-primary)',
-                marginBottom: '12px'
-              }}>
-                64dp Big Target Size
-              </h3>
-
-              <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                Farmers and sorting workers frequently operate with damp hands, sap residue, or heavy rubber gloves.
-                All interactive targets are ≥ 48dp, and the central camera trigger is a <strong>massive 72dp target</strong> with haptic feedback.
-              </p>
-            </div>
-
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '10px 14px',
-              borderRadius: '10px',
-              background: 'rgba(251, 191, 36, 0.08)',
-              marginTop: '20px',
-              fontSize: '0.8rem',
-              color: '#FBBF24',
-              fontWeight: 600
-            }}>
-              <CheckCircle size={16} />
-              <span>Tested with thick rubber work gloves</span>
-            </div>
-          </motion.div>
-
-          {/* Rule 3: Direct Sunlight Contrast */}
-          <motion.div
-            whileHover={{ y: -6 }}
-            className="glass-panel"
-            style={{
-              padding: '32px 28px',
-              borderRadius: '24px',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between'
-            }}
-          >
-            <div>
-              <div style={{
-                width: '52px',
-                height: '52px',
-                borderRadius: '16px',
-                background: 'rgba(96, 165, 250, 0.15)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#60A5FA',
-                marginBottom: '20px'
-              }}>
-                <SunMedium size={26} />
-              </div>
-
-              <div style={{
-                fontSize: '0.78rem',
-                fontWeight: 800,
-                color: '#60A5FA',
-                textTransform: 'uppercase',
-                letterSpacing: '0.04em',
-                marginBottom: '6px'
-              }}>
-                MANDATORY RULE §3
-              </div>
-
-              <h3 style={{
-                fontSize: '1.45rem',
-                fontWeight: 800,
-                color: 'var(--text-primary)',
-                marginBottom: '12px'
-              }}>
-                Outdoor Sunlight Legibility
-              </h3>
-
-              <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                High-contrast typography (body copy ≥ 16sp, headings ≥ 20sp).
-                <strong> Never rely on color alone</strong>: all ripeness indicators pair distinctive text labels, icons, and high-contrast bounding boxes visible on low-cost Android displays under direct noon glare.
-              </p>
-            </div>
-
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '10px 14px',
-              borderRadius: '10px',
-              background: 'rgba(96, 165, 250, 0.08)',
-              marginTop: '20px',
-              fontSize: '0.8rem',
-              color: '#60A5FA',
-              fontWeight: 600
-            }}>
-              <CheckCircle size={16} />
-              <span>WCAG AAA outdoor contrast ratios</span>
-            </div>
-          </motion.div>
+        <div className="field__grid">
+          {RULES.map(({ Icon, title, body, proof }, i) => (
+            <motion.article key={title} className="rule" {...trigger}>
+              <motion.div
+                className="rule__inner"
+                initial={{ opacity: 0, y: 32 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.3 }}
+                transition={{ duration: 1, delay: i * 0.1, ease: EASE_OUT }}
+              >
+                <span className="rule__icon">
+                  <Icon size={44} strokeWidth={1.5} />
+                </span>
+                <h3 className="h3 rule__title">{title}</h3>
+                <p className="rule__body">{body}</p>
+                <p className="rule__proof mono">
+                  {proof.map((p, j) => (
+                    <React.Fragment key={p}>
+                      {j > 0 && <span className="rule__sep">{i === 0 ? '→' : '·'}</span>}
+                      <span>{p}</span>
+                    </React.Fragment>
+                  ))}
+                </p>
+              </motion.div>
+            </motion.article>
+          ))}
         </div>
       </div>
     </section>

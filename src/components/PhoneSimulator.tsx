@@ -1,840 +1,493 @@
-import React, { useState, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import confetti from 'canvas-confetti';
-import { 
-  Camera, 
-  RotateCw, 
-  History, 
-  Flashlight, 
-  WifiOff, 
-  Check, 
-  Upload, 
-  Sparkles, 
-  ChevronRight, 
-  Clock, 
-  AlertCircle,
-  Share2,
-  BookmarkPlus,
-  X
-} from 'lucide-react';
-import { BANANA_SAMPLES, INITIAL_MOCK_HISTORY } from '../data/bananaData';
-import type { BananaSample, ScanRecord } from '../data/bananaData';
+import React, { useRef, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+  BANANA_SAMPLES,
+  INITIAL_MOCK_HISTORY,
+  RIPENESS_LEVELS,
+  confidenceLevel,
+  ripenessLevel,
+  varietyByName
+} from '../data/bananaData';
+import type { BananaSample, Ripeness, ScanRecord } from '../data/bananaData';
 import { sound } from '../utils/audio';
-import { AnimatedBananaIcon, AnimatedCameraScanIcon } from './AnimatedIcons';
+import { EASE_OUT, useIconTrigger } from '../lib/motion';
+import {
+  BananaMark,
+  CheckIcon,
+  CloseIcon,
+  FlashIcon,
+  GalleryIcon,
+  HistoryIcon,
+  RotateIcon,
+  ScanIcon,
+  SignalOffIcon,
+  SpeakerIcon,
+  SunIcon,
+  UploadIcon
+} from './AnimatedIcons';
+import { MaskText, Reveal } from './Reveal';
+import './PhoneSimulator.css';
+
+const levelColor = (ripeness: Ripeness) => ripenessLevel(ripeness).color;
+
+const TIPS = [
+  { Icon: ScanIcon, text: 'Hold one banana inside the frame. One fruit gives the clearest answer.' },
+  { Icon: SunIcon, text: 'Too dark? The app tells you and suggests the flash before you scan.' },
+  { Icon: HistoryIcon, text: 'Every scan is saved on the phone with its photo. Open the clock to see them.' }
+];
 
 export const PhoneSimulator: React.FC = () => {
-  const [selectedSample, setSelectedSample] = useState<BananaSample>(BANANA_SAMPLES[0]);
+  const [selected, setSelected] = useState<BananaSample>(BANANA_SAMPLES[0]);
   const [isScanning, setIsScanning] = useState(false);
   const [showResult, setShowResult] = useState(false);
-  const [flashActive, setFlashActive] = useState(false);
+  const [flashOn, setFlashOn] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
-  const [historyList, setHistoryList] = useState<ScanRecord[]>(INITIAL_MOCK_HISTORY);
+  const [history, setHistory] = useState<ScanRecord[]>(INITIAL_MOCK_HISTORY);
   const [customImage, setCustomImage] = useState<string | null>(null);
-  const [screenFlash, setScreenFlash] = useState(false);
-
+  const [shutterFlash, setShutterFlash] = useState(0);
+  const [soundOn, setSoundOn] = useState(sound.enabled);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const trigger = useIconTrigger();
 
-  // Trigger simulated camera scan
+  const activeImage = customImage || selected.image;
+  const level = ripenessLevel(selected.ripeness);
+  const sure = confidenceLevel(selected.confidence);
+  const dishes = varietyByName(selected.variety).dishes[selected.ripeness].slice(0, 3);
+
+  const toggleSound = () => {
+    const next = !sound.enabled;
+    sound.enabled = next;
+    setSoundOn(next);
+    sound.playTap();
+  };
+
   const handleScan = () => {
     if (isScanning) return;
-
     sound.playShutter();
-    setScreenFlash(true);
-    setTimeout(() => setScreenFlash(false), 80);
-
-    setIsScanning(true);
+    setShutterFlash((n) => n + 1);
+    setHistoryOpen(false);
     setShowResult(false);
+    setIsScanning(true);
 
-    // Realistic quantized TFLite inference latency: ~38ms - 300ms UI animation
-    setTimeout(() => {
+    window.setTimeout(() => {
       setIsScanning(false);
       setShowResult(true);
       sound.playSuccess();
-
-      // Trigger confetti celebration
-      try {
-        confetti({
-          particleCount: 40,
-          spread: 60,
-          origin: { y: 0.65 },
-          colors: ['#FBBF24', '#34D399', '#10B981', '#F59E0B']
-        });
-      } catch {
-        // ignore if canvas not supported
-      }
-
-      // Add to SQLite history log
-      const newRecord: ScanRecord = {
-        id: `scan-${Date.now().toString().slice(-4)}`,
-        variety: selectedSample.variety,
-        ripeness: selectedSample.ripeness,
-        confidence: selectedSample.confidence,
-        timestamp: 'Just now • Viewfinder Capture',
-        image: customImage || selectedSample.image
-      };
-      setHistoryList((prev) => [newRecord, ...prev]);
-    }, 450);
+      setHistory((prev) => [
+        {
+          id: `scan-${Date.now()}`,
+          variety: selected.variety,
+          ripeness: selected.ripeness,
+          confidence: selected.confidence,
+          timestamp: 'Just now',
+          image: activeImage
+        },
+        ...prev
+      ]);
+    }, 1500);
   };
 
-  // Handle custom image file upload
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        if (event.target?.result) {
-          setCustomImage(event.target.result as string);
-          setShowResult(false);
-          sound.playTap();
-        }
-      };
-      reader.readAsDataURL(file);
-    }
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (typeof event.target?.result === 'string') {
+        setCustomImage(event.target.result);
+        setShowResult(false);
+        sound.playTap();
+      }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
   };
 
-  const activeImage = customImage || selectedSample.image;
+  const pickSample = (sample: BananaSample) => {
+    sound.playTap();
+    setSelected(sample);
+    setCustomImage(null);
+    setShowResult(false);
+  };
 
   return (
-    <section id="simulator" style={{
-      position: 'relative',
-      padding: '80px 0 120px',
-      background: 'rgba(18, 38, 25, 0.25)'
-    }}>
+    <section id="simulator" className="section on-stalk sim">
       <div className="container">
-        {/* Section Header */}
-        <div style={{ textAlign: 'center', maxWidth: '780px', margin: '0 auto 50px' }}>
-          <div className="glass-pill" style={{ marginBottom: '14px' }}>
-            <AnimatedCameraScanIcon size={20} />
-            <span style={{ color: 'var(--text-accent)', fontWeight: 700 }}>LIVE INTERACTIVE DEMO</span>
-          </div>
-
-          <h2 style={{
-            fontSize: 'clamp(2rem, 4vw, 3.2rem)',
-            fontWeight: 800,
-            marginBottom: '16px',
-            letterSpacing: '-0.03em'
-          }}>
-            Experience The <span className="gradient-text-banana">Flutter App</span> in Action
-          </h2>
-
-          <p style={{ fontSize: '1.08rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-            Test on-device classification without installing anything. Select a tropical banana sample below
-            or upload a photo from your device, then press the <strong>shutter button</strong> to run simulated TensorFlow Lite inference.
-          </p>
+        <div className="section-head">
+          <p className="label">Try it</p>
+          <MaskText className="h2" text="Scan a banana without installing anything." />
+          <Reveal delay={0.15}>
+            <p className="lede">
+              Pick a sample or load your own photo, then press the shutter. The sheet that slides up is the same one
+              the app shows in the field.
+            </p>
+          </Reveal>
         </div>
 
-        {/* Simulator Grid */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-          alignItems: 'center',
-          gap: '40px'
-        }}>
-          {/* Left Column: Sample Switcher & Controls */}
-          <div>
-            <h3 style={{
-              fontSize: '1.35rem',
-              fontWeight: 700,
-              marginBottom: '18px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px'
-            }}>
-              <span>1. Choose A Banana Test Specimen</span>
-            </h3>
-
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-              gap: '12px',
-              marginBottom: '26px'
-            }}>
+        <div className="sim__grid">
+          <Reveal className="sim__controls">
+            <p className="sim__step mono">Pick a sample</p>
+            <div className="sim__samples">
               {BANANA_SAMPLES.map((sample) => {
-                const isSelected = selectedSample.id === sample.id && !customImage;
+                const isSelected = selected.id === sample.id && !customImage;
                 return (
-                  <motion.button
+                  <button
                     key={sample.id}
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.97 }}
-                    onClick={() => {
-                      sound.playTap();
-                      setSelectedSample(sample);
-                      setCustomImage(null);
-                      setShowResult(false);
-                    }}
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'flex-start',
-                      padding: '12px',
-                      borderRadius: '14px',
-                      background: isSelected ? 'rgba(52, 211, 153, 0.15)' : 'var(--bg-card)',
-                      border: isSelected ? '2px solid #34D399' : '1px solid var(--border-subtle)',
-                      boxShadow: isSelected ? '0 0 20px rgba(52, 211, 153, 0.25)' : 'none',
-                      cursor: 'pointer',
-                      textAlign: 'left'
-                    }}
+                    className={`sample ${isSelected ? 'is-selected' : ''}`}
+                    onClick={() => pickSample(sample)}
+                    aria-pressed={isSelected}
                   >
-                    <div style={{
-                      position: 'relative',
-                      width: '100%',
-                      height: '75px',
-                      borderRadius: '10px',
-                      overflow: 'hidden',
-                      marginBottom: '8px'
-                    }}>
-                      <img
-                        src={sample.image}
-                        alt={sample.variety}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      />
-                      <span style={{
-                        position: 'absolute',
-                        top: '4px',
-                        right: '4px',
-                        fontSize: '0.62rem',
-                        fontWeight: 800,
-                        padding: '2px 6px',
-                        borderRadius: '4px',
-                        background: sample.badgeColor,
-                        color: '#000000'
-                      }}>
-                        {sample.ripeness.toUpperCase()}
+                    <span className="sample__img">
+                      <img src={sample.image} alt="" loading="lazy" />
+                    </span>
+                    <span className="sample__row">
+                      <span className="sample__name">{sample.variety}</span>
+                      <span className="sample__stage mono">
+                        <span className="stage-dot" style={{ background: levelColor(sample.ripeness) }} />
+                        {sample.ripeness}
                       </span>
-                    </div>
-
-                    <span style={{
-                      fontFamily: 'var(--font-heading)',
-                      fontWeight: 700,
-                      fontSize: '0.95rem',
-                      color: 'var(--text-primary)'
-                    }}>
-                      {sample.variety}
                     </span>
-
-                    <span style={{
-                      fontSize: '0.72rem',
-                      color: 'var(--text-muted)'
-                    }}>
-                      Stage {sample.ripenessStageNumber} • {Math.round(sample.confidence * 100)}% Match
-                    </span>
-                  </motion.button>
+                    {isSelected && (
+                      <motion.span
+                        layoutId="sample-ring"
+                        className="sample__ring"
+                        transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+                      >
+                        <span className="sample__tick">
+                          <CheckIcon size={14} strokeWidth={2.4} />
+                        </span>
+                      </motion.span>
+                    )}
+                  </button>
                 );
               })}
             </div>
 
-            {/* Upload Custom Banana Photo */}
-            <div style={{
-              padding: '18px 20px',
-              borderRadius: '16px',
-              background: 'var(--bg-card)',
-              border: customImage ? '2px solid #34D399' : '1px dashed var(--border-subtle)',
-              marginBottom: '28px'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{
-                    width: '40px',
-                    height: '40px',
-                    borderRadius: '10px',
-                    background: 'rgba(52, 211, 153, 0.1)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#34D399'
-                  }}>
-                    <Upload size={20} />
-                  </div>
-                  <div>
-                    <div style={{ fontWeight: 700, fontSize: '0.92rem', color: 'var(--text-primary)' }}>
-                      {customImage ? 'Custom Photo Loaded' : 'Upload From Your Camera / Gallery'}
-                    </div>
-                    <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: 0 }}>
-                      Supports JPG, PNG, WEBP from your garden or grocery
-                    </p>
-                  </div>
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept="image/*"
+              onChange={handleFileUpload}
+              className="visually-hidden"
+              tabIndex={-1}
+              aria-hidden="true"
+            />
+            <motion.button
+              className={`upload ${customImage ? 'is-loaded' : ''}`}
+              onClick={() => {
+                sound.playTap();
+                fileInputRef.current?.click();
+              }}
+              {...trigger}
+            >
+              <span className="upload__icon">
+                <UploadIcon size={22} />
+              </span>
+              <span className="upload__text">
+                <strong>{customImage ? 'Your photo is in the viewfinder' : 'Use your own photo'}</strong>
+                <span>{customImage ? 'Choose a different one' : 'A JPG or PNG from your phone or computer'}</span>
+              </span>
+            </motion.button>
+            <p className="sim__note">
+              In this demo, uploaded photos get the selected sample&apos;s result. The real model runs inside the app.
+            </p>
+
+            <ul className="sim__tips">
+              {TIPS.map(({ Icon, text }) => (
+                <motion.li key={text} {...trigger}>
+                  <span className="sim__tip-icon">
+                    <Icon size={20} />
+                  </span>
+                  {text}
+                </motion.li>
+              ))}
+            </ul>
+          </Reveal>
+
+          <Reveal className="sim__phone-wrap" delay={0.1} y={48}>
+            <div className="phone">
+              <div className="phone__screen">
+                <div className="phone__island" />
+
+                <div className="phone__status mono">
+                  <span>09:41</span>
+                  <span className="phone__status-right">
+                    <SignalOffIcon size={14} />
+                    <span>Offline</span>
+                  </span>
                 </div>
 
-                <div>
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    accept="image/*"
-                    onChange={handleFileUpload}
-                    style={{ display: 'none' }}
-                  />
-                  <button
+                <div className="phone__appbar">
+                  <span className="phone__brand">
+                    <BananaMark size={22} />
+                    <span>
+                      banana<b>lyze</b>
+                    </span>
+                  </span>
+                  <span className="phone__appbar-actions">
+                    <motion.button
+                      className={`phone__icon-btn ${flashOn ? 'is-on' : ''}`}
+                      onClick={() => {
+                        sound.playTap();
+                        setFlashOn((f) => !f);
+                      }}
+                      aria-pressed={flashOn}
+                      aria-label="Torch"
+                      {...trigger}
+                    >
+                      <FlashIcon on={flashOn} size={17} />
+                    </motion.button>
+                    <motion.button
+                      className="phone__icon-btn"
+                      onClick={() => {
+                        sound.playTap();
+                        setHistoryOpen(true);
+                      }}
+                      aria-label="Scan history"
+                      {...trigger}
+                    >
+                      <HistoryIcon size={17} />
+                    </motion.button>
+                  </span>
+                </div>
+
+                <div className={`phone__view ${isScanning ? 'is-scanning' : ''} ${showResult ? 'is-locked' : ''}`}>
+                  <AnimatePresence initial={false}>
+                    <motion.img
+                      key={activeImage}
+                      src={activeImage}
+                      alt="Banana in the viewfinder"
+                      className="phone__photo"
+                      style={{ filter: flashOn ? 'brightness(1.18) contrast(1.05)' : 'none' }}
+                      initial={{ opacity: 0, scale: 1.08 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.7, ease: EASE_OUT }}
+                    />
+                  </AnimatePresence>
+
+                  <div className="vf" aria-hidden="true">
+                    <span className="vf__c vf__c--tl" />
+                    <span className="vf__c vf__c--tr" />
+                    <span className="vf__c vf__c--br" />
+                    <span className="vf__c vf__c--bl" />
+                    {!showResult && <span className="vf__line" />}
+                  </div>
+
+                  <div className="phone__live mono">
+                    <span className="phone__live-dot" />
+                    Looks good, tap Scan
+                  </div>
+
+                  <AnimatePresence>
+                    {shutterFlash > 0 && (
+                      <motion.div
+                        key={shutterFlash}
+                        className="phone__flash"
+                        initial={{ opacity: 0.85 }}
+                        animate={{ opacity: 0 }}
+                        transition={{ duration: 0.35 }}
+                      />
+                    )}
+                  </AnimatePresence>
+
+                  <AnimatePresence>
+                    {isScanning && (
+                      <motion.div
+                        className="phone__scanning"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.25 }}
+                      >
+                        <span className="mono">Analyzing your banana…</span>
+                        <span className="phone__progress">
+                          <motion.span
+                            initial={{ scaleX: 0 }}
+                            animate={{ scaleX: 1 }}
+                            transition={{ duration: 1.45, ease: [0.4, 0, 0.2, 1] }}
+                          />
+                        </span>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  <AnimatePresence>
+                    {showResult && (
+                      <motion.div
+                        className="result tone-light"
+                        initial={{ y: '105%' }}
+                        animate={{ y: 0 }}
+                        exit={{ y: '105%' }}
+                        transition={{ type: 'spring', damping: 30, stiffness: 260 }}
+                        role="status"
+                      >
+                        <span className="result__grip" />
+                        <div className="result__head">
+                          <div>
+                            <p className="result__variety">
+                              {selected.variety} <span>— {selected.ripeness}</span>
+                            </p>
+                            <p className="result__sci">{level.summary}</p>
+                          </div>
+                          <motion.button
+                            className="phone__icon-btn"
+                            onClick={() => setShowResult(false)}
+                            aria-label="Close result"
+                            {...trigger}
+                          >
+                            <CloseIcon size={16} />
+                          </motion.button>
+                        </div>
+
+                        <div className="result__stage" aria-hidden="true">
+                          {RIPENESS_LEVELS.map((r) => (
+                            <span
+                              key={r.id}
+                              className={`result__chip ${r.id === selected.ripeness ? 'is-on' : ''}`}
+                              style={{ background: r.id === selected.ripeness ? r.color : undefined }}
+                            >
+                              {r.id}
+                            </span>
+                          ))}
+                        </div>
+
+                        <div className="result__conf">
+                          <span className="mono">How sure we are</span>
+                          <span className="result__pct">{sure.label}</span>
+                          <span className="result__bars">
+                            {[0, 1, 2].map((i) => (
+                              <span key={i} className="result__bar">
+                                <motion.span
+                                  initial={{ scaleX: 0 }}
+                                  animate={{ scaleX: i < sure.bars ? 1 : 0 }}
+                                  transition={{ duration: 0.5, delay: 0.25 + i * 0.12, ease: EASE_OUT }}
+                                />
+                              </span>
+                            ))}
+                          </span>
+                        </div>
+
+                        <p className="result__use">
+                          <span className="mono">Handling tip</span>
+                          {level.handlingTip}
+                        </p>
+
+                        {dishes.length > 0 && (
+                          <div className="result__use">
+                            <span className="mono">Suggested dishes</span>
+                            <ul className="result__dishes">
+                              {dishes.map((d) => (
+                                <li key={d}>{d}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        <button
+                          className="result__again"
+                          onClick={() => {
+                            sound.playTap();
+                            setShowResult(false);
+                          }}
+                        >
+                          Scan Again
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  <AnimatePresence>
+                    {historyOpen && (
+                      <motion.div
+                        className="drawer"
+                        initial={{ x: '100%' }}
+                        animate={{ x: 0 }}
+                        exit={{ x: '100%' }}
+                        transition={{ type: 'spring', damping: 32, stiffness: 280 }}
+                      >
+                        <div className="drawer__head">
+                          <span>Saved scans</span>
+                          <motion.button
+                            className="phone__icon-btn"
+                            onClick={() => {
+                              sound.playTap();
+                              setHistoryOpen(false);
+                            }}
+                            aria-label="Close history"
+                            {...trigger}
+                          >
+                            <CloseIcon size={16} />
+                          </motion.button>
+                        </div>
+                        <p className="drawer__note mono">Stored on this phone only. Nothing is uploaded.</p>
+                        <ul className="drawer__list">
+                          {history.map((item, i) => (
+                            <motion.li
+                              key={item.id}
+                              initial={{ opacity: 0, x: 24 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: 0.12 + i * 0.05, duration: 0.5, ease: EASE_OUT }}
+                            >
+                              <img src={item.image} alt="" />
+                              <span className="drawer__meta">
+                                <strong>{item.variety}</strong>
+                                <span className="mono">{item.timestamp}</span>
+                              </span>
+                              <span className="drawer__level mono">
+                                <span className="stage-dot" style={{ background: levelColor(item.ripeness) }} />
+                                {item.ripeness}
+                              </span>
+                            </motion.li>
+                          ))}
+                        </ul>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                <div className="phone__bottom">
+                  <motion.button className="phone__round" onClick={() => sound.playTap()} aria-label="Switch camera" {...trigger}>
+                    <RotateIcon size={19} />
+                  </motion.button>
+
+                  <motion.button
+                    className="shutter"
+                    onClick={handleScan}
+                    whileTap={{ scale: 0.9 }}
+                    aria-label="Take photo and classify"
+                    disabled={isScanning}
+                  >
+                    <span className="shutter__inner" />
+                  </motion.button>
+
+                  <motion.button
+                    className="phone__round"
                     onClick={() => {
                       sound.playTap();
                       fileInputRef.current?.click();
                     }}
-                    style={{
-                      padding: '8px 14px',
-                      borderRadius: '8px',
-                      background: 'rgba(255, 255, 255, 0.08)',
-                      border: '1px solid var(--border-subtle)',
-                      fontSize: '0.82rem',
-                      fontWeight: 600,
-                      color: 'var(--text-primary)',
-                      cursor: 'pointer'
-                    }}
+                    aria-label="Open gallery"
+                    {...trigger}
                   >
-                    {customImage ? 'Replace Photo' : 'Browse File'}
-                  </button>
+                    <GalleryIcon size={19} />
+                  </motion.button>
                 </div>
               </div>
             </div>
 
-            {/* Field Guide Instructions */}
-            <div style={{
-              padding: '20px',
-              borderRadius: '16px',
-              background: 'rgba(21, 37, 26, 0.5)',
-              border: '1px solid rgba(52, 211, 153, 0.2)'
-            }}>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                fontWeight: 700,
-                fontSize: '0.9rem',
-                color: '#34D399',
-                marginBottom: '8px'
-              }}>
-                <Sparkles size={16} />
-                <span>Field Operator Guidelines (Project Plan §7)</span>
-              </div>
-              <ul style={{
-                fontSize: '0.82rem',
-                color: 'var(--text-secondary)',
-                paddingLeft: '20px',
-                lineHeight: 1.6
-              }}>
-                <li>Position banana cluster within green reticle frame for optimal bounding.</li>
-                <li>Operates under full sunlight without cellular data or cloud latency.</li>
-                <li>Tap History icon inside phone to inspect stored SQLite database records.</li>
-              </ul>
+            <div className="sim__under">
+              <p className="sim__hint mono">Press the shutter</p>
+              <motion.button
+                className={`sim__sound mono ${soundOn ? 'is-on' : ''}`}
+                onClick={toggleSound}
+                aria-pressed={soundOn}
+                {...trigger}
+              >
+                <SpeakerIcon on={soundOn} size={16} />
+                Sound {soundOn ? 'on' : 'off'}
+              </motion.button>
             </div>
-          </div>
-
-          {/* Right Column: Realistic Phone Chassis Container */}
-          <div style={{ display: 'flex', justifyContent: 'center' }}>
-            <div className="phone-mockup-wrapper">
-              <div className="phone-chassis">
-                <div className="phone-screen">
-                  {/* Top Notch */}
-                  <div className="phone-notch">
-                    <div className="phone-camera-lens" />
-                  </div>
-
-                  {/* Status Bar */}
-                  <div className="phone-status-bar">
-                    <span>09:41</span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <WifiOff size={13} color="#34D399" aria-label="Zero cellular data used - 100% Offline" />
-                      <span style={{ fontSize: '0.66rem', color: '#34D399' }}>OFFLINE</span>
-                      <span>100%</span>
-                    </div>
-                  </div>
-
-                  {/* App Header Bar (Flutter UI) */}
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '8px 16px',
-                    background: 'rgba(10, 20, 13, 0.8)',
-                    borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-                    zIndex: 30
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <AnimatedBananaIcon size={20} />
-                      <span style={{
-                        fontFamily: 'var(--font-heading)',
-                        fontWeight: 800,
-                        fontSize: '1rem',
-                        color: '#FFFFFF'
-                      }}>
-                        banana<span style={{ color: '#FBBF24' }}>Check</span>
-                      </span>
-                    </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      {/* Flashlight toggle */}
-                      <button
-                        onClick={() => {
-                          sound.playTap();
-                          setFlashActive(!flashActive);
-                        }}
-                        style={{
-                          width: '32px',
-                          height: '32px',
-                          borderRadius: '8px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          background: flashActive ? '#FBBF24' : 'rgba(255, 255, 255, 0.1)',
-                          color: flashActive ? '#000000' : '#FFFFFF',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        <Flashlight size={15} />
-                      </button>
-
-                      {/* Local SQLite History Drawer Toggle */}
-                      <button
-                        onClick={() => {
-                          sound.playTap();
-                          setHistoryOpen(true);
-                        }}
-                        style={{
-                          width: '32px',
-                          height: '32px',
-                          borderRadius: '8px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          background: 'rgba(255, 255, 255, 0.1)',
-                          color: '#FFFFFF',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        <History size={15} />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Camera Viewfinder Viewport */}
-                  <div style={{
-                    position: 'relative',
-                    flex: 1,
-                    overflow: 'hidden',
-                    background: '#040805'
-                  }}>
-                    {/* Viewfinder Banana Image */}
-                    <img
-                      src={activeImage}
-                      alt="Banana in Viewfinder"
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                        filter: flashActive ? 'brightness(1.2)' : 'none',
-                        transition: 'filter 0.2s ease'
-                      }}
-                    />
-
-                    {/* Camera Shutter White Flash overlay */}
-                    <AnimatePresence>
-                      {screenFlash && (
-                        <motion.div
-                          initial={{ opacity: 0.9 }}
-                          animate={{ opacity: 0 }}
-                          exit={{ opacity: 0 }}
-                          transition={{ duration: 0.15 }}
-                          style={{
-                            position: 'absolute',
-                            inset: 0,
-                            background: '#FFFFFF',
-                            zIndex: 60
-                          }}
-                        />
-                      )}
-                    </AnimatePresence>
-
-                    {/* Bounding Box Scanner Reticle Overlay */}
-                    <div className="scanner-overlay">
-                      <div className="reticle-corner reticle-tl" />
-                      <div className="reticle-corner reticle-tr" />
-                      <div className="reticle-corner reticle-bl" />
-                      <div className="reticle-corner reticle-br" />
-
-                      {/* Pulsing laser scan line */}
-                      <div className="scanner-laser" />
-
-                      {/* Live inference stats floating badge */}
-                      <div style={{
-                        position: 'absolute',
-                        top: '12px',
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        padding: '4px 10px',
-                        borderRadius: '999px',
-                        background: 'rgba(0, 0, 0, 0.7)',
-                        backdropFilter: 'blur(8px)',
-                        fontSize: '0.68rem',
-                        fontFamily: 'var(--font-mono)',
-                        color: '#34D399',
-                        border: '1px solid rgba(52, 211, 153, 0.4)'
-                      }}>
-                        <span style={{
-                          width: '6px',
-                          height: '6px',
-                          borderRadius: '50%',
-                          backgroundColor: '#34D399',
-                          display: 'inline-block'
-                        }} />
-                        <span>TFLite Int8 Active • 38ms</span>
-                      </div>
-                    </div>
-
-                    {/* Scanning Spinner State */}
-                    {isScanning && (
-                      <div style={{
-                        position: 'absolute',
-                        inset: 0,
-                        background: 'rgba(0, 0, 0, 0.65)',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        zIndex: 40
-                      }}>
-                        <motion.div
-                          animate={{ rotate: 360 }}
-                          transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
-                          style={{
-                            width: '46px',
-                            height: '46px',
-                            borderRadius: '50%',
-                            border: '3px solid rgba(52, 211, 153, 0.2)',
-                            borderTopColor: '#34D399',
-                            marginBottom: '12px'
-                          }}
-                        />
-                        <span style={{
-                          fontSize: '0.82rem',
-                          fontFamily: 'var(--font-mono)',
-                          fontWeight: 600,
-                          color: '#FFFFFF'
-                        }}>
-                          Running On-Device TFLite...
-                        </span>
-                      </div>
-                    )}
-
-                    {/* Result Sheet Card (Slides Up on scan completion) */}
-                    <AnimatePresence>
-                      {showResult && (
-                        <motion.div
-                          initial={{ y: 280, opacity: 0 }}
-                          animate={{ y: 0, opacity: 1 }}
-                          exit={{ y: 280, opacity: 0 }}
-                          transition={{ type: 'spring', damping: 24, stiffness: 220 }}
-                          style={{
-                            position: 'absolute',
-                            left: '10px',
-                            right: '10px',
-                            bottom: '10px',
-                            background: 'rgba(13, 23, 16, 0.95)',
-                            backdropFilter: 'blur(20px)',
-                            WebkitBackdropFilter: 'blur(20px)',
-                            borderRadius: '22px',
-                            padding: '16px',
-                            border: '1px solid rgba(52, 211, 153, 0.4)',
-                            boxShadow: '0 12px 40px rgba(0, 0, 0, 0.8)',
-                            zIndex: 45
-                          }}
-                        >
-                          {/* Close result button */}
-                          <button
-                            onClick={() => setShowResult(false)}
-                            style={{
-                              position: 'absolute',
-                              top: '12px',
-                              right: '12px',
-                              color: '#94A3B8',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            <X size={16} />
-                          </button>
-
-                          {/* Variety & Ripeness Header */}
-                          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: '10px' }}>
-                            <div style={{
-                              width: '38px',
-                              height: '38px',
-                              borderRadius: '10px',
-                              background: 'rgba(52, 211, 153, 0.2)',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              border: '1px solid #34D399'
-                            }}>
-                              <AnimatedBananaIcon size={22} />
-                            </div>
-
-                            <div style={{ flex: 1 }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <h4 style={{
-                                  fontSize: '1.15rem',
-                                  fontWeight: 800,
-                                  color: '#FFFFFF',
-                                  margin: 0
-                                }}>
-                                  {selectedSample.variety}
-                                </h4>
-                                <span style={{
-                                  fontSize: '0.68rem',
-                                  fontWeight: 800,
-                                  padding: '2px 8px',
-                                  borderRadius: '6px',
-                                  background: selectedSample.badgeColor,
-                                  color: '#000000'
-                                }}>
-                                  {selectedSample.ripeness.toUpperCase()}
-                                </span>
-                              </div>
-                              <p style={{
-                                fontSize: '0.72rem',
-                                color: '#94A3B8',
-                                fontStyle: 'italic',
-                                margin: 0
-                              }}>
-                                {selectedSample.scientificName}
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Confidence Gauge Bar */}
-                          <div style={{ marginBottom: '12px' }}>
-                            <div style={{
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                              fontSize: '0.74rem',
-                              fontWeight: 600,
-                              color: '#CBD5E1',
-                              marginBottom: '4px'
-                            }}>
-                              <span>Model Confidence</span>
-                              <span style={{ color: '#34D399', fontFamily: 'var(--font-mono)' }}>
-                                {(selectedSample.confidence * 100).toFixed(1)}%
-                              </span>
-                            </div>
-                            <div style={{
-                              width: '100%',
-                              height: '6px',
-                              borderRadius: '3px',
-                              background: 'rgba(255, 255, 255, 0.1)',
-                              overflow: 'hidden'
-                            }}>
-                              <motion.div
-                                initial={{ width: 0 }}
-                                animate={{ width: `${selectedSample.confidence * 100}%` }}
-                                transition={{ duration: 0.6, ease: 'easeOut' }}
-                                style={{
-                                  height: '100%',
-                                  background: '#10B981'
-                                }}
-                              />
-                            </div>
-                          </div>
-
-                          {/* Agricultural & Culinary Insight */}
-                          <div style={{
-                            background: 'rgba(0, 0, 0, 0.35)',
-                            padding: '10px',
-                            borderRadius: '10px',
-                            fontSize: '0.75rem',
-                            color: '#E2E8F0',
-                            marginBottom: '12px',
-                            lineHeight: 1.45
-                          }}>
-                            <div style={{ fontWeight: 700, color: '#FBBF24', marginBottom: '2px' }}>
-                              Recommended Use:
-                            </div>
-                            {selectedSample.culinaryUse}
-                          </div>
-
-                          {/* Action Button: Scan another */}
-                          <button
-                            onClick={() => {
-                              sound.playTap();
-                              setShowResult(false);
-                            }}
-                            style={{
-                              width: '100%',
-                              padding: '8px',
-                              borderRadius: '10px',
-                              background: '#10B981',
-                              color: '#062817',
-                              fontWeight: 700,
-                              fontSize: '0.8rem',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            Scan Another Specimen
-                          </button>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-
-                    {/* SQLite Local History Drawer Modal inside Phone */}
-                    <AnimatePresence>
-                      {historyOpen && (
-                        <motion.div
-                          initial={{ opacity: 0, x: '100%' }}
-                          animate={{ opacity: 1, x: 0 }}
-                          exit={{ opacity: 0, x: '100%' }}
-                          transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-                          style={{
-                            position: 'absolute',
-                            inset: 0,
-                            background: 'rgba(8, 14, 10, 0.98)',
-                            backdropFilter: 'blur(20px)',
-                            zIndex: 55,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            padding: '16px'
-                          }}
-                        >
-                          <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            paddingBottom: '12px',
-                            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-                            marginBottom: '14px'
-                          }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                              <History size={18} color="#34D399" />
-                              <span style={{ fontWeight: 800, fontSize: '0.98rem', color: '#FFFFFF' }}>
-                                Local SQLite History
-                              </span>
-                            </div>
-
-                            <button
-                              onClick={() => {
-                                sound.playTap();
-                                setHistoryOpen(false);
-                              }}
-                              style={{ color: '#94A3B8', cursor: 'pointer' }}
-                            >
-                              <X size={18} />
-                            </button>
-                          </div>
-
-                          <div style={{ fontSize: '0.75rem', color: '#94A3B8', marginBottom: '12px' }}>
-                            Stored on-device via Sqflite. 0KB synced to external servers.
-                          </div>
-
-                          {/* Records list */}
-                          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                            {historyList.map((item) => (
-                              <div
-                                key={item.id}
-                                style={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: '10px',
-                                  padding: '10px',
-                                  borderRadius: '10px',
-                                  background: 'rgba(255, 255, 255, 0.05)',
-                                  border: '1px solid rgba(255, 255, 255, 0.08)'
-                                }}
-                              >
-                                <img
-                                  src={item.image}
-                                  alt={item.variety}
-                                  style={{ width: '42px', height: '42px', borderRadius: '8px', objectFit: 'cover' }}
-                                />
-                                <div style={{ flex: 1 }}>
-                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <span style={{ fontWeight: 700, fontSize: '0.85rem', color: '#FFFFFF' }}>
-                                      {item.variety}
-                                    </span>
-                                    <span style={{
-                                      fontSize: '0.64rem',
-                                      padding: '1px 5px',
-                                      borderRadius: '4px',
-                                      background: item.ripeness === 'Ripe' ? '#F59E0B' : '#84CC16',
-                                      color: '#000000',
-                                      fontWeight: 800
-                                    }}>
-                                      {item.ripeness}
-                                    </span>
-                                  </div>
-                                  <div style={{ fontSize: '0.68rem', color: '#94A3B8', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                    <Clock size={11} />
-                                    <span>{item.timestamp}</span>
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-
-                  {/* Shutter Bottom Bar (Flutter UI 64dp Touch Target) */}
-                  <div style={{
-                    padding: '16px 20px',
-                    background: 'rgba(10, 18, 12, 0.95)',
-                    borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-around',
-                    zIndex: 30
-                  }}>
-                    {/* Switch camera simulated */}
-                    <button
-                      onClick={() => sound.playTap()}
-                      style={{
-                        width: '42px',
-                        height: '42px',
-                        borderRadius: '50%',
-                        background: 'rgba(255, 255, 255, 0.08)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: '#94A3B8',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      <RotateCw size={18} />
-                    </button>
-
-                    {/* Primary Camera Shutter (>= 64dp per guidelines) */}
-                    <motion.button
-                      whileHover={{ scale: 1.08 }}
-                      whileTap={{ scale: 0.92 }}
-                      onClick={handleScan}
-                      className="camera-shutter-btn"
-                      aria-label="Capture banana for inference"
-                    >
-                      <div className="camera-shutter-inner" />
-                    </motion.button>
-
-                    {/* Gallery open simulated */}
-                    <button
-                      onClick={() => {
-                        sound.playTap();
-                        fileInputRef.current?.click();
-                      }}
-                      style={{
-                        width: '42px',
-                        height: '42px',
-                        borderRadius: '50%',
-                        background: 'rgba(255, 255, 255, 0.08)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: '#94A3B8',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      <Camera size={18} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          </Reveal>
         </div>
       </div>
     </section>

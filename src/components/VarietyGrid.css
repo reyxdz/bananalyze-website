@@ -1,0 +1,267 @@
+.vari__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.6fr);
+  gap: clamp(28px, 5vw, 72px);
+  align-items: start;
+}
+
+.vari__list [role='tablist'] {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--line-strong);
+}
+
+.vari__tab {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    'name genome'
+    'tag genome';
+  align-items: center;
+  column-gap: 16px;
+  padding: 15px 0 15px 22px;
+  border-bottom: 1px solid var(--line-strong);
+  text-align: left;
+  color: var(--ink-3);
+  transition: color 0.45s var(--ease-out), padding 0.6s var(--ease-out);
+}
+
+.vari__tab:hover {
+  color: var(--ink-2);
+}
+
+.vari__tab.is-active {
+  color: var(--ink);
+  padding-left: 30px;
+}
+
+.vari__mark {
+  position: absolute;
+  left: 0;
+  top: 15px;
+  bottom: 15px;
+  width: 4px;
+  border-radius: 4px;
+  background: var(--ripe);
+}
+
+.vari__tab-name {
+  grid-area: name;
+  font-stretch: 122%;
+  font-weight: 760;
+  font-size: clamp(1.5rem, 2.6vw, 2.25rem);
+  letter-spacing: -0.045em;
+  line-height: 1;
+}
+
+.vari__tab-tag {
+  grid-area: tag;
+  margin-top: 5px;
+  font-size: 0.86rem;
+}
+
+.vari__tab-genome {
+  grid-area: genome;
+  font-size: 0.7rem;
+}
+
+/* ---------- panel ---------- */
+
+.vari__photo {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  border-radius: var(--r-xl);
+  overflow: hidden;
+  background: var(--stalk);
+}
+
+.vari__photo img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.vari__sci {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  height: 30px;
+  padding: 0 12px;
+  background: color-mix(in srgb, var(--card) 92%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: var(--ink);
+  z-index: 2;
+}
+
+.vari__art-wrap {
+  position: absolute;
+  inset: 0;
+}
+
+.vari__art {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(120% 90% at 70% 10%, var(--stalk-3), transparent 60%),
+    repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.025) 0 10px, transparent 10px 20px),
+    var(--stalk);
+}
+
+.vari__art svg {
+  width: min(78%, 460px);
+  height: auto;
+  overflow: visible;
+  filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.28));
+}
+
+.vari__art-note,
+.vari__art-cap {
+  position: absolute;
+  right: 16px;
+  bottom: 22px;
+  color: rgba(236, 238, 228, 0.6);
+}
+
+.vari__art-cap {
+  top: 20px;
+  bottom: auto;
+  left: 20px;
+  right: auto;
+}
+
+.vari__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: clamp(20px, 3vw, 44px);
+  margin-top: 28px;
+}
+
+.vari__desc p {
+  font-size: 1.04rem;
+  line-height: 1.6;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+.vari__uses {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 18px;
+}
+
+.vari__uses li {
+  height: 30px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 520;
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+
+.vari__test-title {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  color: var(--ink-3);
+}
+
+.vari__test-title b {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.vari__specs div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.vari__specs div:first-child {
+  border-top: 1px solid var(--line);
+}
+
+.vari__specs dt {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink-2);
+  font-size: 0.94rem;
+}
+
+.vari__specs dd {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 620;
+  font-size: 0.96rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.vari__bar {
+  width: 72px;
+  height: 6px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--line);
+}
+
+.vari__bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--ink);
+  transform-origin: left;
+}
+
+@media (max-width: 960px) {
+  .vari__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .vari__list [role='tablist'] {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 16px;
+  }
+
+  .vari__tab {
+    padding: 14px 0 14px 18px;
+  }
+
+  .vari__tab.is-active {
+    padding-left: 22px;
+  }
+
+  .vari__mark {
+    top: 14px;
+    bottom: 14px;
+  }
+}
+
+@media (max-width: 640px) {
+  .vari__body {
+    grid-template-columns: 1fr;
+  }
+
+  .vari__photo {
+    border-radius: var(--r-lg);
+  }
+
+  .vari__tab-genome {
+    display: none;
+  }
+}

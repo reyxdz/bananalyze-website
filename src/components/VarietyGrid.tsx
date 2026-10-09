@@ -1,369 +1,203 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Leaf, Info, Award, Shield, BarChart3, Check } from 'lucide-react';
-import { sound } from '../utils/audio';
-import { AnimatedBananaIcon } from './AnimatedIcons';
+import { AnimatePresence, motion } from 'framer-motion';
+import { RIPENESS_LEVELS, RIPENESS_ORDER, VARIETIES, type Variety } from '../data/bananaData';
+import { EASE_OUT } from '../lib/motion';
+import { MaskText, Reveal } from './Reveal';
+import './VarietyGrid.css';
 
-interface VarietyItem {
-  name: string;
-  localTag: string;
-  genome: string;
-  scientificName: string;
-  brixSweetness: string;
-  peelThickness: string;
-  shelfLife: string;
-  image: string;
-  badgeColor: string;
-  highlight: string;
-  description: string;
-  culinaryRoles: string[];
-}
+const FINGER = 'M12 20C34 40 82 42 108 22c3-2 7 0 4 5C90 62 30 62 9 24c-1-2 1-5 3-4z';
 
-const VARIETIES: VarietyItem[] = [
-  {
-    name: 'Lakatan',
-    localTag: 'King of Dessert Bananas',
-    genome: 'AA Diploid',
-    scientificName: 'Musa acuminata',
-    brixSweetness: '22° - 24° Brix',
-    peelThickness: 'Medium (3.2 mm)',
-    shelfLife: '5 - 7 Days',
-    image: '/assets/variety_lakatan.jpg',
-    badgeColor: '#F59E0B',
-    highlight: 'Deep aromatic orange-yellow pulp, rich in beta-carotene.',
-    description: 'The premier dessert banana of the Philippines. Prized for its distinct golden flesh, fragrant floral aroma, and high consumer market valuation in urban trade centers.',
-    culinaryRoles: ['Table fruit', 'Fruit platters', 'Premium export', 'Infant dietary supplements']
-  },
-  {
-    name: 'Saba (Cardaba)',
-    localTag: 'The Culinary Workhorse',
-    genome: 'BBB Triploid',
-    scientificName: 'Musa balbisiana cross',
-    brixSweetness: '14° - 18° Brix',
-    peelThickness: 'Very Thick (4.8 mm)',
-    shelfLife: '10 - 14 Days',
-    image: '/assets/variety_saba.jpg',
-    badgeColor: '#84CC16',
-    highlight: 'Angular squared shape, dense heat-resistant starch core.',
-    description: 'The foundation of Filipino street food and comfort cooking. Exceptionally hardy, resistant to drought and typhoons, with dense starchy pulp that caramelizes under intense heat.',
-    culinaryRoles: ['Turon (Lumpia)', 'Banana Cue', 'Nilagang Saging', 'Maruya (Fritters)', 'Pochero Stew']
-  },
-  {
-    name: 'Latundan',
-    localTag: 'The Silk Apple Banana',
-    genome: 'AAB Triploid',
-    scientificName: 'Musa acuminata × balbisiana',
-    brixSweetness: '23° - 26° Brix',
-    peelThickness: 'Ultra Thin (1.8 mm)',
-    shelfLife: '3 - 4 Days',
-    image: '/assets/variety_latundan.jpg',
-    badgeColor: '#FBBF24',
-    highlight: 'Delicate thin skin with apple-like sweet tangy acidity.',
-    description: 'A beloved family staple across Luzon and the Visayas. Plump, rounder fingers with papery peel and ivory white flesh that has a subtle, refreshing tartness.',
-    culinaryRoles: ['Digestive table fruit', 'Convalescence recovery', 'Traditional banana bread', 'Baby food']
-  },
-  {
-    name: 'Cavendish',
-    localTag: 'Global Export Flagship',
-    genome: 'AAA Triploid',
-    scientificName: 'Musa acuminata',
-    brixSweetness: '19° - 21° Brix',
-    peelThickness: 'Medium-Thick (3.5 mm)',
-    shelfLife: '7 - 10 Days',
-    image: '/assets/variety_cavendish.jpg',
-    badgeColor: '#EAB308',
-    highlight: 'Uniform cylindrical curvature, long shelf life in reefer transit.',
-    description: 'The standard of international maritime banana commerce, produced extensively in Davao and Northern Mindanao. Reliable yield, mild taste, and steady ripening curves.',
-    culinaryRoles: ['Commercial retail', 'International export', 'Gym & athletic nutrition', 'Breakfast cereal']
-  }
-];
+/** Drawn stand-in for varieties we don't have a photo of yet. */
+const VarietyArt: React.FC<{ variety: Variety }> = ({ variety }) => {
+  const small = variety.id === 'senorita';
+  return (
+    <div className="vari__art">
+      <svg viewBox="0 0 320 200" aria-hidden="true">
+        {small && (
+          <motion.path
+            d={FINGER}
+            transform="translate(40 52) scale(2.1)"
+            fill="none"
+            stroke="rgba(236, 238, 228, 0.4)"
+            strokeWidth="0.7"
+            strokeDasharray="2.5 2.5"
+            initial={{ pathLength: 0 }}
+            animate={{ pathLength: 1 }}
+            transition={{ delay: 0.3, duration: 1.2, ease: EASE_OUT }}
+          />
+        )}
+        <motion.g
+          initial={{ opacity: 0, y: 18, rotate: -10 }}
+          animate={{ opacity: 1, y: 0, rotate: -4 }}
+          transition={{ delay: small ? 0.9 : 0.35, duration: 1, ease: EASE_OUT }}
+        >
+          <g transform={small ? 'translate(95 80) scale(1.15)' : 'translate(34 40) scale(2.2)'}>
+            <path d="M11 22L4.5 11.5" stroke="#4C6B24" strokeWidth="5" strokeLinecap="round" />
+            <path d={FINGER} fill={small ? 'var(--s5)' : 'var(--s4)'} stroke="rgba(15,34,25,0.55)" strokeWidth="1" />
+            <path d="M16 27c22 17 66 19 90 1" stroke="rgba(255,255,255,0.4)" strokeWidth="1.4" fill="none" strokeLinecap="round" />
+            <circle cx="111.4" cy="25.2" r="2.2" fill="#2E2410" />
+          </g>
+        </motion.g>
+      </svg>
+      {small && <span className="vari__art-cap mono">Dashed outline: a typical dessert banana</span>}
+      <span className="vari__art-note mono">Illustration · photo coming</span>
+    </div>
+  );
+};
+
+const tally = (v: Variety) =>
+  RIPENESS_ORDER.reduce(
+    (acc, r) => ({ correct: acc.correct + v.tested[r].correct, total: acc.total + v.tested[r].total }),
+    { correct: 0, total: 0 }
+  );
 
 export const VarietyGrid: React.FC = () => {
-  const [activeVariety, setActiveVariety] = useState<VarietyItem>(VARIETIES[0]);
+  const [active, setActive] = useState(0);
+  const v = VARIETIES[active];
+  const total = tally(v);
+  const dishes = [...new Set(RIPENESS_ORDER.flatMap((r) => v.dishes[r]))].slice(0, 6);
 
   return (
-    <section id="varieties" style={{
-      position: 'relative',
-      padding: '100px 0'
-    }}>
+    <section id="varieties" className="section section--deep vari">
       <div className="container">
-        {/* Section Title */}
-        <div style={{ textAlign: 'center', maxWidth: '800px', margin: '0 auto 50px' }}>
-          <div className="glass-pill" style={{ marginBottom: '14px' }}>
-            <Award size={18} color="#FBBF24" />
-            <span style={{ color: '#FBBF24', fontWeight: 700 }}>INDIGENOUS &amp; EXPORT TAXONOMY</span>
-          </div>
-
-          <h2 style={{
-            fontSize: 'clamp(2rem, 4vw, 3.2rem)',
-            fontWeight: 800,
-            marginBottom: '16px',
-            letterSpacing: '-0.03em'
-          }}>
-            Four Dominant <span className="gradient-text-banana">Philippine Varieties</span>
-          </h2>
-
-          <p style={{ fontSize: '1.08rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-            Trained on localized field photographs reflecting actual agricultural cultivars.
-            The on-device model extracts morphological traits including pedicel angle, peel thickness, and cross-sectional geometry.
-          </p>
+        <div className="section-head">
+          <p className="label">Varieties</p>
+          <MaskText className="h2" text="Six bananas the model knows by sight." />
+          <Reveal delay={0.15}>
+            <p className="lede">
+              Two cooking bananas and four dessert bananas sold in Philippine markets. Each card shows how the model
+              did on test photos it had never seen.
+            </p>
+          </Reveal>
         </div>
 
-        {/* Variety Cards Grid */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(270px, 1fr))',
-          gap: '24px',
-          marginBottom: '50px'
-        }}>
-          {VARIETIES.map((variety) => {
-            const isActive = activeVariety.name === variety.name;
-            return (
-              <motion.div
-                key={variety.name}
-                whileHover={{ y: -8 }}
-                onClick={() => {
-                  sound.playTap();
-                  setActiveVariety(variety);
-                }}
-                className="glass-panel"
-                style={{
-                  padding: '20px',
-                  borderRadius: '22px',
-                  cursor: 'pointer',
-                  border: isActive ? `2px solid ${variety.badgeColor}` : '1px solid var(--border-subtle)',
-                  boxShadow: isActive ? `0 0 25px rgba(251, 191, 36, 0.25)` : 'var(--shadow-sm)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
-                  transition: 'all 0.3s ease'
-                }}
-              >
-                <div>
-                  {/* Photo container */}
-                  <div style={{
-                    position: 'relative',
-                    width: '100%',
-                    height: '190px',
-                    borderRadius: '16px',
-                    overflow: 'hidden',
-                    marginBottom: '16px'
-                  }}>
-                    <img
-                      src={variety.image}
-                      alt={variety.name}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+        <div className="vari__grid">
+          <Reveal className="vari__list" amount={0.3}>
+            <div role="tablist" aria-label="Banana varieties">
+              {VARIETIES.map((item, i) => (
+                <button
+                  key={item.id}
+                  role="tab"
+                  id={`variety-tab-${i}`}
+                  aria-selected={i === active}
+                  aria-controls="variety-panel"
+                  className={`vari__tab ${i === active ? 'is-active' : ''}`}
+                  onClick={() => setActive(i)}
+                >
+                  {i === active && (
+                    <motion.span
+                      layoutId="variety-mark"
+                      className="vari__mark"
+                      transition={{ type: 'spring', stiffness: 380, damping: 34 }}
                     />
-                    <span style={{
-                      position: 'absolute',
-                      top: '10px',
-                      left: '10px',
-                      fontSize: '0.68rem',
-                      fontFamily: 'var(--font-mono)',
-                      fontWeight: 800,
-                      padding: '3px 8px',
-                      borderRadius: '6px',
-                      background: 'rgba(0, 0, 0, 0.8)',
-                      color: '#34D399',
-                      border: '1px solid rgba(52, 211, 153, 0.4)'
-                    }}>
-                      {variety.genome}
-                    </span>
-                  </div>
-
-                  <div style={{
-                    fontSize: '0.78rem',
-                    fontWeight: 700,
-                    color: variety.badgeColor,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.04em',
-                    marginBottom: '4px'
-                  }}>
-                    {variety.localTag}
-                  </div>
-
-                  <h3 style={{
-                    fontSize: '1.45rem',
-                    fontWeight: 800,
-                    color: 'var(--text-primary)',
-                    marginBottom: '6px'
-                  }}>
-                    {variety.name}
-                  </h3>
-
-                  <p style={{
-                    fontSize: '0.82rem',
-                    color: 'var(--text-muted)',
-                    fontStyle: 'italic',
-                    marginBottom: '12px'
-                  }}>
-                    {variety.scientificName}
-                  </p>
-
-                  <p style={{
-                    fontSize: '0.86rem',
-                    color: 'var(--text-secondary)',
-                    lineHeight: 1.5,
-                    marginBottom: '16px'
-                  }}>
-                    {variety.highlight}
-                  </p>
-                </div>
-
-                {/* Key Spec Badges */}
-                <div style={{
-                  paddingTop: '14px',
-                  borderTop: '1px solid var(--border-subtle)',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  fontSize: '0.76rem',
-                  color: 'var(--text-muted)'
-                }}>
-                  <div>
-                    <span style={{ display: 'block', color: 'var(--text-primary)', fontWeight: 700 }}>
-                      {variety.brixSweetness.split(' ')[0]}
-                    </span>
-                    <span>Sweetness</span>
-                  </div>
-                  <div>
-                    <span style={{ display: 'block', color: 'var(--text-primary)', fontWeight: 700 }}>
-                      {variety.shelfLife}
-                    </span>
-                    <span>Post-Harvest</span>
-                  </div>
-                  <div>
-                    <span style={{ display: 'block', color: 'var(--text-primary)', fontWeight: 700 }}>
-                      {variety.peelThickness.split(' ')[0]}
-                    </span>
-                    <span>Peel Skin</span>
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
-
-        {/* Selected Variety Detailed Inspector Banner */}
-        <div className="glass-panel" style={{
-          padding: '32px',
-          borderRadius: '24px',
-          background: 'rgba(14, 26, 17, 0.92)',
-          border: '1px solid rgba(52, 211, 153, 0.3)'
-        }}>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-            gap: '28px',
-            alignItems: 'center'
-          }}>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                <span style={{
-                  padding: '3px 10px',
-                  borderRadius: '999px',
-                  background: activeVariety.badgeColor,
-                  color: '#000000',
-                  fontSize: '0.72rem',
-                  fontWeight: 800
-                }}>
-                  {activeVariety.genome}
-                </span>
-                <span style={{ fontSize: '0.85rem', color: '#94A3B8' }}>
-                  Model Accuracy on Dataset: <strong>98.7%</strong>
-                </span>
-              </div>
-
-              <h3 style={{
-                fontSize: '1.8rem',
-                fontWeight: 900,
-                color: '#FFFFFF',
-                marginBottom: '10px'
-              }}>
-                {activeVariety.name}: Agronomic &amp; Market Profile
-              </h3>
-
-              <p style={{ fontSize: '0.92rem', color: '#CBD5E1', lineHeight: 1.6, marginBottom: '20px' }}>
-                {activeVariety.description}
-              </p>
-
-              <div>
-                <div style={{
-                  fontSize: '0.82rem',
-                  fontWeight: 700,
-                  color: '#FBBF24',
-                  textTransform: 'uppercase',
-                  marginBottom: '8px'
-                }}>
-                  Primary Uses &amp; Recipes:
-                </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                  {activeVariety.culinaryRoles.map((role) => (
-                    <span
-                      key={role}
-                      style={{
-                        fontSize: '0.78rem',
-                        padding: '4px 10px',
-                        borderRadius: '8px',
-                        background: 'rgba(255, 255, 255, 0.08)',
-                        color: '#F0FDF4',
-                        border: '1px solid rgba(255, 255, 255, 0.12)'
-                      }}
-                    >
-                      ✓ {role}
-                    </span>
-                  ))}
-                </div>
-              </div>
+                  )}
+                  <span className="vari__tab-name">{item.name}</span>
+                  <span className="vari__tab-tag">{item.kind}</span>
+                  <span className="vari__tab-genome mono">{item.genome}</span>
+                </button>
+              ))}
             </div>
+          </Reveal>
 
-            {/* Quick Metrics Comparison Table */}
-            <div style={{
-              background: 'rgba(0, 0, 0, 0.4)',
-              padding: '24px',
-              borderRadius: '18px',
-              border: '1px solid rgba(255, 255, 255, 0.08)'
-            }}>
-              <div style={{
-                fontFamily: 'var(--font-heading)',
-                fontWeight: 800,
-                fontSize: '1.05rem',
-                color: '#FFFFFF',
-                marginBottom: '16px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}>
-                <BarChart3 size={18} color="#34D399" />
-                <span>Field Classification Parameters</span>
+          <Reveal className="vari__panel" delay={0.1} amount={0.2}>
+            <div id="variety-panel" role="tabpanel" aria-labelledby={`variety-tab-${active}`}>
+              <div className="vari__photo">
+                <AnimatePresence initial={false}>
+                  {v.image ? (
+                    <motion.img
+                      key={v.id}
+                      src={v.image}
+                      alt={`${v.name} bananas`}
+                      initial={{ clipPath: 'inset(0% 0% 0% 100%)', scale: 1.12 }}
+                      animate={{ clipPath: 'inset(0% 0% 0% 0%)', scale: 1 }}
+                      exit={{ opacity: 0, transition: { delay: 0.6, duration: 0.2 } }}
+                      transition={{ duration: 1, ease: [0.76, 0, 0.24, 1] }}
+                    />
+                  ) : (
+                    <motion.div
+                      key={v.id}
+                      className="vari__art-wrap"
+                      initial={{ clipPath: 'inset(0% 0% 0% 100%)' }}
+                      animate={{ clipPath: 'inset(0% 0% 0% 0%)' }}
+                      exit={{ opacity: 0, transition: { delay: 0.6, duration: 0.2 } }}
+                      transition={{ duration: 1, ease: [0.76, 0, 0.24, 1] }}
+                    >
+                      <VarietyArt variety={v} />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+                <span className="vari__sci chip">{v.kind}</span>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {[
-                  { label: 'Sugar Concentration', value: activeVariety.brixSweetness },
-                  { label: 'Peel Caliper Thickness', value: activeVariety.peelThickness },
-                  { label: 'Ambient Holding Shelf Life', value: activeVariety.shelfLife },
-                  { label: 'Botanical Cross Group', value: activeVariety.genome }
-                ].map((row) => (
-                  <div
-                    key={row.label}
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      paddingBottom: '8px',
-                      borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
-                      fontSize: '0.85rem'
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.div
+                  key={v.id}
+                  className="vari__body"
+                  initial="hidden"
+                  animate="shown"
+                  exit="gone"
+                  variants={{
+                    shown: { transition: { staggerChildren: 0.06, delayChildren: 0.15 } }
+                  }}
+                >
+                  <motion.div
+                    className="vari__desc"
+                    variants={{
+                      hidden: { opacity: 0, y: 14 },
+                      shown: { opacity: 1, y: 0, transition: { duration: 0.6, ease: EASE_OUT } },
+                      gone: { opacity: 0, y: -8, transition: { duration: 0.2 } }
                     }}
                   >
-                    <span style={{ color: '#94A3B8' }}>{row.label}</span>
-                    <span style={{ fontWeight: 700, color: '#34D399', fontFamily: 'var(--font-mono)' }}>
-                      {row.value}
-                    </span>
-                  </div>
-                ))}
-              </div>
+                    <p>{v.description}</p>
+                    <ul className="vari__uses" aria-label="Dish ideas from the app">
+                      {dishes.map((u) => (
+                        <li key={u}>{u}</li>
+                      ))}
+                    </ul>
+                  </motion.div>
+
+                  <motion.div
+                    variants={{
+                      hidden: { opacity: 0, y: 14 },
+                      shown: { opacity: 1, y: 0, transition: { duration: 0.6, ease: EASE_OUT } },
+                      gone: { opacity: 0, y: -8, transition: { duration: 0.2 } }
+                    }}
+                  >
+                    <p className="mono vari__test-title">
+                      Test photos fully right <b>{total.correct}/{total.total}</b>
+                    </p>
+                    <dl className="vari__specs">
+                      {RIPENESS_LEVELS.map((r) => {
+                        const t = v.tested[r.id];
+                        return (
+                          <div key={r.id}>
+                            <dt>
+                              <span className="stage-dot" style={{ background: r.color }} />
+                              {r.id}
+                            </dt>
+                            <dd>
+                              <span className="vari__bar" aria-hidden="true">
+                                <motion.span
+                                  initial={{ scaleX: 0 }}
+                                  animate={{ scaleX: t.correct / t.total }}
+                                  transition={{ delay: 0.3, duration: 0.9, ease: EASE_OUT }}
+                                />
+                              </span>
+                              {t.correct}/{t.total}
+                            </dd>
+                          </div>
+                        );
+                      })}
+                      <div>
+                        <dt>Genome group</dt>
+                        <dd>{v.genome}</dd>
+                      </div>
+                    </dl>
+                  </motion.div>
+                </motion.div>
+              </AnimatePresence>
             </div>
-          </div>
+          </Reveal>
         </div>
       </div>
     </section>

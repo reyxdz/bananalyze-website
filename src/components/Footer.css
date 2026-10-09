@@ -1,0 +1,142 @@
+.foot {
+  position: relative;
+  padding-top: clamp(88px, 11vw, 150px);
+  overflow: hidden;
+}
+
+.foot__cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 32px;
+  padding-bottom: clamp(56px, 8vw, 96px);
+  border-bottom: 1px solid var(--stalk-line);
+}
+
+.foot__cta-title {
+  font-size: clamp(2.6rem, 7vw, 6rem);
+  max-width: 12ch;
+}
+
+.foot__cta-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.foot__cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 40px;
+  padding: 56px 0 40px;
+}
+
+.foot__about {
+  max-width: 36ch;
+  color: var(--on-stalk-2);
+}
+
+.foot__h {
+  color: var(--on-stalk-2);
+  margin-bottom: 16px;
+}
+
+.foot ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.foot ul a {
+  position: relative;
+  color: var(--on-stalk);
+  font-size: 0.98rem;
+  background-image: linear-gradient(var(--s5), var(--s5));
+  background-size: 0% 1.5px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  padding-bottom: 2px;
+  transition: background-size 0.5s var(--ease-out);
+}
+
+.foot ul a:hover {
+  background-size: 100% 1.5px;
+}
+
+.foot__mark {
+  container-type: inline-size;
+  overflow: hidden;
+  line-height: 0.8;
+  margin: 0 -0.04em;
+  padding-top: 0.04em;
+}
+
+.foot__mark span {
+  display: block;
+  font-stretch: 125%;
+  font-weight: 460;
+  font-size: min(13cqi, 11.2rem);
+  letter-spacing: -0.065em;
+  white-space: nowrap;
+  color: var(--stalk-3);
+}
+
+.foot__mark b {
+  font-weight: 840;
+  color: var(--s5);
+}
+
+.foot__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 28px;
+  padding: 26px 0 calc(28px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--stalk-line);
+  color: var(--on-stalk-2);
+}
+
+.foot__credit {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.foot__elites {
+  display: inline-flex;
+  border-radius: 4px;
+  transition: opacity 0.3s var(--ease-out);
+}
+
+.foot__elites:hover {
+  opacity: 0.8;
+}
+
+.foot__elites .glitch {
+  height: 16px;
+}
+
+.foot__top {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--on-stalk);
+}
+
+@media (max-width: 760px) {
+  .foot__cols {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .foot__about {
+    grid-column: 1 / -1;
+  }
+
+  .foot__bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

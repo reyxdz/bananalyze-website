@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { MotionConfig, useMotionValueEvent, useScroll, useTransform } from 'framer-motion';
 import { Navbar } from './components/Navbar';
 import { HeroSection } from './components/HeroSection';
 import { PhoneSimulator } from './components/PhoneSimulator';
@@ -10,86 +11,54 @@ import { ArchitectureSpecs } from './components/ArchitectureSpecs';
 import { FAQSection } from './components/FAQSection';
 import { Footer } from './components/Footer';
 import { DownloadModal } from './components/DownloadModal';
-import { sound } from './utils/audio';
+import { RIPENESS_COLORS } from './data/bananaData';
+import { startSmoothScroll } from './lib/smoothScroll';
+
+const RIPEN_STOPS = RIPENESS_COLORS.map((_, i) => i / (RIPENESS_COLORS.length - 1));
+
+/** The page ripens from unripe to overripe as you scroll; --ripe carries the current peel colour. */
+function useRipeningPage() {
+  const { scrollYProgress } = useScroll();
+  const ripe = useTransform(scrollYProgress, RIPEN_STOPS, RIPENESS_COLORS);
+
+  useEffect(() => {
+    document.documentElement.style.setProperty('--ripe', ripe.get());
+  }, [ripe]);
+
+  useMotionValueEvent(ripe, 'change', (value) => {
+    document.documentElement.style.setProperty('--ripe', value);
+  });
+
+  return scrollYProgress;
+}
 
 export function App() {
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
-  const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
-  const [downloadModalOpen, setDownloadModalOpen] = useState<boolean>(false);
+  const [downloadOpen, setDownloadOpen] = useState(false);
+  const progress = useRipeningPage();
 
-  // Sync theme with html root attribute
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-  }, [theme]);
+  useEffect(() => startSmoothScroll(), []);
 
-  // Sync sound setting
-  useEffect(() => {
-    sound.enabled = soundEnabled;
-  }, [soundEnabled]);
-
-  const toggleTheme = () => {
-    sound.playTap();
-    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
-  };
-
-  const toggleSound = () => {
-    setSoundEnabled((prev) => {
-      const next = !prev;
-      sound.enabled = next;
-      if (next) sound.playTap();
-      return next;
-    });
-  };
-
-  const scrollToSimulator = () => {
-    const el = document.getElementById('simulator');
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
+  const openDownload = () => setDownloadOpen(true);
 
   return (
-    <div className="banana-app-wrapper" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      {/* Top Sticky Navigation */}
-      <Navbar
-        theme={theme}
-        toggleTheme={toggleTheme}
-        soundEnabled={soundEnabled}
-        toggleSound={toggleSound}
-        openDownloadModal={() => setDownloadModalOpen(true)}
-      />
+    <MotionConfig reducedMotion="user">
+      <Navbar progress={progress} openDownloadModal={openDownload} />
 
-      {/* Main Content Sections */}
       <main style={{ flex: 1 }}>
-        <HeroSection
-          openDownloadModal={() => setDownloadModalOpen(true)}
-          scrollToSimulator={scrollToSimulator}
-        />
-
+        <HeroSection openDownloadModal={openDownload} />
         <PhoneSimulator />
-
         <RipenessSlider />
-
         <VarietyGrid />
-
         <OfflineVsCloud />
-
         <FieldFirstUX />
-
         <ArchitectureSpecs />
-
         <FAQSection />
       </main>
 
-      {/* Footer */}
-      <Footer />
+      <Footer openDownloadModal={openDownload} />
 
-      {/* Download / QR Code Modal */}
-      <DownloadModal
-        isOpen={downloadModalOpen}
-        onClose={() => setDownloadModalOpen(false)}
-      />
-    </div>
+      <DownloadModal isOpen={downloadOpen} onClose={() => setDownloadOpen(false)} />
+    </MotionConfig>
   );
 }
 
