@@ -7,12 +7,15 @@
   padding: 20px;
 }
 
+.modal--primer {
+  visibility: hidden;
+  pointer-events: none;
+}
+
 .modal__backdrop {
   position: absolute;
   inset: 0;
   background: var(--scrim);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
 }
 
 .modal__card {

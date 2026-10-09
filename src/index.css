@@ -29,7 +29,7 @@
   --sticker: #2A3FD4;
   --sticker-deep: #1C2CA3;
   --sticker-ink: #F3F5FF;
-  --scrim: rgba(14, 32, 25, 0.55);
+  --scrim: rgba(14, 32, 25, 0.66);
 }
 
 /* Night shift in the packing house: paper drops to the near-black of a wet
@@ -56,7 +56,7 @@
   --sticker: #4A5DF2;
   --sticker-deep: #3647DB;
   --sticker-ink: #F5F6FF;
-  --scrim: rgba(2, 5, 3, 0.74);
+  --scrim: rgba(2, 5, 3, 0.82);
 }
 
 :root {
@@ -105,6 +105,7 @@ html {
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  scrollbar-gutter: stable;
   scroll-padding-top: calc(var(--header-h) + 12px);
 }
 

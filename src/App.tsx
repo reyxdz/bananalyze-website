@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import {
   MotionConfig,
   useMotionValueEvent,
@@ -53,19 +53,17 @@ function useRipeningScrollbar(scrollYProgress: MotionValue<number>) {
   });
 }
 
-export function App() {
-  const [downloadOpen, setDownloadOpen] = useState(false);
-  const { scrollY, scrollYProgress } = useScroll();
-  useRipeningScrollbar(scrollYProgress);
+interface PageProps {
+  scrollY: MotionValue<number>;
+  progress: MotionValue<number>;
+  openDownload: () => void;
+}
 
-  useEffect(() => pauseOffscreen(), []);
-  useEffect(() => preloadImages(), []);
-
-  const openDownload = () => setDownloadOpen(true);
-
+/** Memoised so opening or closing the download modal doesn't re-render every section. */
+const Page = memo(function Page({ scrollY, progress, openDownload }: PageProps) {
   return (
-    <MotionConfig reducedMotion="user">
-      <Navbar scrollY={scrollY} progress={scrollYProgress} openDownloadModal={openDownload} />
+    <>
+      <Navbar scrollY={scrollY} progress={progress} openDownloadModal={openDownload} />
 
       <main style={{ flex: 1 }}>
         <HeroSection openDownloadModal={openDownload} />
@@ -79,8 +77,25 @@ export function App() {
       </main>
 
       <Footer openDownloadModal={openDownload} />
+    </>
+  );
+});
 
-      <DownloadModal isOpen={downloadOpen} onClose={() => setDownloadOpen(false)} />
+export function App() {
+  const [downloadOpen, setDownloadOpen] = useState(false);
+  const { scrollY, scrollYProgress } = useScroll();
+  useRipeningScrollbar(scrollYProgress);
+
+  useEffect(() => pauseOffscreen(), []);
+  useEffect(() => preloadImages(), []);
+
+  const openDownload = useCallback(() => setDownloadOpen(true), []);
+  const closeDownload = useCallback(() => setDownloadOpen(false), []);
+
+  return (
+    <MotionConfig reducedMotion="user">
+      <Page scrollY={scrollY} progress={scrollYProgress} openDownload={openDownload} />
+      <DownloadModal isOpen={downloadOpen} onClose={closeDownload} />
     </MotionConfig>
   );
 }
