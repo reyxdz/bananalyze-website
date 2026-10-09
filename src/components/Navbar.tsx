@@ -3,7 +3,6 @@ import {
   AnimatePresence,
   motion,
   useMotionValueEvent,
-  useScroll,
   useTransform,
   type MotionValue
 } from 'framer-motion';
@@ -63,11 +62,12 @@ const StripSegment: React.FC<{ progress: MotionValue<number>; index: number }> =
 };
 
 interface NavbarProps {
+  scrollY: MotionValue<number>;
   progress: MotionValue<number>;
   openDownloadModal: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ progress, openDownloadModal }) => {
+export const Navbar: React.FC<NavbarProps> = ({ scrollY, progress, openDownloadModal }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [stageIdx, setStageIdx] = useState(0);
@@ -75,7 +75,6 @@ export const Navbar: React.FC<NavbarProps> = ({ progress, openDownloadModal }) =
   const trigger = useIconTrigger();
   const dark = useTheme() === 'dark';
   const release = useRelease();
-  const { scrollY } = useScroll();
 
   useMotionValueEvent(scrollY, 'change', (y) => setScrolled(y > 12));
   useMotionValueEvent(progress, 'change', (p) => {
@@ -146,7 +145,7 @@ export const Navbar: React.FC<NavbarProps> = ({ progress, openDownloadModal }) =
         </motion.a>
 
         <nav className="nav__links" aria-label="Sections">
-          {LINKS.map((link) => (
+          {LINKS.map((link, i) => (
             <a
               key={link.id}
               href={`#${link.id}`}
@@ -159,6 +158,7 @@ export const Navbar: React.FC<NavbarProps> = ({ progress, openDownloadModal }) =
                 <motion.span
                   layoutId="nav-active"
                   className="nav__link-mark"
+                  style={{ background: linkColor(i) }}
                   transition={{ type: 'spring', stiffness: 380, damping: 32 }}
                 />
               )}

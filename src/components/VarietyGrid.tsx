@@ -108,6 +108,7 @@ export const VarietyGrid: React.FC = () => {
                       key={v.id}
                       src={v.image}
                       alt={`${v.name} bananas`}
+                      decoding="async"
                       initial={{ clipPath: 'inset(0% 0% 0% 100%)', scale: 1.12 }}
                       animate={{ clipPath: 'inset(0% 0% 0% 0%)', scale: 1 }}
                       exit={{ opacity: 0, transition: { delay: 0.6, duration: 0.2 } }}

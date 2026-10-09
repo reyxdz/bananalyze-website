@@ -16,21 +16,32 @@
   transform-origin: left center;
 }
 
+/* The span is the packet's travel distance; the packet itself is ::before,
+   so it moves with transform instead of re-laying out every frame. */
 .pipe__packet {
   position: absolute;
   top: 50%;
   left: 0;
-  width: 44px;
+  right: 44px;
   height: 6px;
   margin-top: -3px;
+  animation: packet-x 3s var(--ease-in-out) infinite;
+}
+
+.pipe__packet::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 44px;
+  height: 6px;
   border-radius: 6px;
   background: linear-gradient(90deg, transparent, var(--sticker));
-  animation: packet-x 3s var(--ease-in-out) infinite;
 }
 
 @keyframes packet-x {
   0% {
-    left: 0;
+    transform: translateX(0);
     opacity: 0;
   }
   10% {
@@ -40,7 +51,7 @@
     opacity: 1;
   }
   100% {
-    left: calc(100% - 44px);
+    transform: translateX(100%);
     opacity: 0;
   }
 }
@@ -61,17 +72,28 @@
   border-radius: 22px;
   background: var(--card);
   box-shadow: inset 0 0 0 1px var(--line), 0 14px 26px -18px rgba(15, 34, 25, 0.4);
-  animation: pipe-glow 3s var(--ease-in-out) infinite;
+  position: relative;
+}
+
+.pipe__icon::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1.5px var(--sticker), 0 14px 30px -14px rgba(42, 63, 212, 0.45);
+  opacity: 0;
+  pointer-events: none;
+  animation: pipe-glow 3s var(--ease-in-out) var(--glow-delay, 0s) infinite;
 }
 
 @keyframes pipe-glow {
   0%,
   18%,
   100% {
-    box-shadow: inset 0 0 0 1px var(--line), 0 14px 26px -18px rgba(15, 34, 25, 0.4);
+    opacity: 0;
   }
   8% {
-    box-shadow: inset 0 0 0 1.5px var(--sticker), 0 14px 30px -14px rgba(42, 63, 212, 0.45);
+    opacity: 1;
   }
 }
 
@@ -146,17 +168,24 @@
 
   .pipe__packet {
     top: 0;
+    bottom: 44px;
     left: 50%;
+    right: auto;
+    width: 6px;
+    height: auto;
+    margin: 0 0 0 -3px;
+    animation-name: packet-y;
+  }
+
+  .pipe__packet::before {
     width: 6px;
     height: 44px;
-    margin: 0 0 0 -3px;
     background: linear-gradient(180deg, transparent, var(--sticker));
-    animation-name: packet-y;
   }
 
   @keyframes packet-y {
     0% {
-      top: 0;
+      transform: translateY(0);
       opacity: 0;
     }
     10% {
@@ -166,7 +195,7 @@
       opacity: 1;
     }
     100% {
-      top: calc(100% - 44px);
+      transform: translateY(100%);
       opacity: 0;
     }
   }

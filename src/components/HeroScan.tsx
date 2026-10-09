@@ -1,7 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   animate,
   motion,
+  useInView,
   useMotionValue,
   useReducedMotion,
   useTransform,
@@ -88,7 +89,7 @@ const ProbeMark: React.FC<{ probe: Probe }> = ({ probe }) => {
   );
 };
 
-const useScanLoop = (progress: MotionValue<number>) => {
+const useScanLoop = (progress: MotionValue<number>, visible: boolean) => {
   const reduce = useReducedMotion();
 
   useEffect(() => {
@@ -96,6 +97,7 @@ const useScanLoop = (progress: MotionValue<number>) => {
       progress.set(1);
       return;
     }
+    if (!visible) return;
     const scan = animate(progress, [0, 1], {
       duration: SCAN_DURATION,
       delay: SCAN_START,
@@ -103,13 +105,18 @@ const useScanLoop = (progress: MotionValue<number>) => {
       repeat: Infinity,
       repeatDelay: SCAN_REPEAT_DELAY
     });
-    return () => scan.stop();
-  }, [reduce, progress]);
+    return () => {
+      scan.stop();
+      progress.set(0);
+    };
+  }, [reduce, progress, visible]);
 };
 
-export const HeroScan: React.FC<{ parallax: MotionValue<string> }> = ({ parallax }) => {
+export const HeroScan: React.FC = () => {
+  const stageRef = useRef<HTMLDivElement>(null);
+  const visible = useInView(stageRef);
   const progress = useMotionValue(0);
-  useScanLoop(progress);
+  useScanLoop(progress, visible);
   const result = RIPENESS_LEVELS[RESULT_LEVEL];
 
   const lineTop = useTransform(progress, (p): string => `${LOCK.top + p * LOCK.height}%`);
@@ -121,7 +128,7 @@ export const HeroScan: React.FC<{ parallax: MotionValue<string> }> = ({ parallax
 
   return (
     <>
-      <motion.div className="scan__stage" style={{ y: parallax }}>
+      <div ref={stageRef} className="scan__stage">
         <motion.div
           className="scan__photo"
           initial={{ scale: 1.16 }}
@@ -130,7 +137,7 @@ export const HeroScan: React.FC<{ parallax: MotionValue<string> }> = ({ parallax
         >
           <div className="scan__drift">
             <img
-              src="/assets/hero_bunch.jpg"
+              src="/assets/hero_bunch.webp"
               alt="A hand of ripe Lakatan bananas hanging from its stalk, being scanned by Bananalyze"
               width={864}
               height={1152}
@@ -147,7 +154,7 @@ export const HeroScan: React.FC<{ parallax: MotionValue<string> }> = ({ parallax
                 opacity: sweepOpacity
               }}
             >
-              <img src="/assets/hero_bunch.jpg" alt="" />
+              <img src="/assets/hero_bunch.webp" alt="" />
               <span className="scan__lens-tint" />
               <span className="scan__lens-dots" />
             </motion.div>
@@ -222,7 +229,7 @@ export const HeroScan: React.FC<{ parallax: MotionValue<string> }> = ({ parallax
             <ProbeMark key={p.id} probe={p} />
           ))}
         </div>
-      </motion.div>
+      </div>
 
       <motion.div
         className="scan__chip mono"

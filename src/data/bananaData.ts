@@ -45,7 +45,7 @@ export const RIPENESS_LEVELS: RipenessLevel[] = [
   {
     id: 'Unripe',
     color: '#689A2B',
-    image: '/assets/ripeness_unripe.jpg',
+    image: '/assets/ripeness_unripe.webp',
     summary: 'Still green. Give it a few days',
     handlingTip: 'Store at room temperature. Best for market sale in 2 to 4 days.',
     peel: 'Green, firm peel',
@@ -58,7 +58,7 @@ export const RIPENESS_LEVELS: RipenessLevel[] = [
   {
     id: 'Ripe',
     color: '#E8C02D',
-    image: '/assets/ripeness_ripe.jpg',
+    image: '/assets/ripeness_ripe.webp',
     summary: 'Ready to eat today',
     handlingTip: 'Ready for immediate consumption or market display today!',
     peel: 'Yellow peel, flesh gives a little',
@@ -71,7 +71,7 @@ export const RIPENESS_LEVELS: RipenessLevel[] = [
   {
     id: 'Overripe',
     color: '#D2901C',
-    image: '/assets/variety_latundan.jpg',
+    image: '/assets/variety_latundan.webp',
     summary: 'Very soft, best for cooking and baking',
     handlingTip: 'Best used immediately for baking, smoothies, or processing.',
     peel: 'Brown spots, very soft',
@@ -134,7 +134,7 @@ export const VARIETIES: Variety[] = [
     name: 'Saba',
     kind: 'Cooking banana',
     genome: 'ABB',
-    image: '/assets/variety_saba.jpg',
+    image: '/assets/variety_saba.webp',
     description:
       'The banana behind Filipino street food. Angular and thick-skinned, with dense starchy flesh that is boiled, grilled or fried, often while still green.',
     benefits: [STARCHY, B6, POTASSIUM, FIBER],
@@ -173,7 +173,7 @@ export const VARIETIES: Variety[] = [
     name: 'Cavendish',
     kind: 'Dessert banana',
     genome: 'AAA',
-    image: '/assets/variety_cavendish.jpg',
+    image: '/assets/variety_cavendish.webp',
     description:
       'The supermarket banana. Long, evenly curved fingers with a clean yellow peel and mild, creamy flesh, eaten ripe.',
     benefits: [B6, POTASSIUM, VITAMIN_C, FIBER],
@@ -212,7 +212,7 @@ export const VARIETIES: Variety[] = [
     name: 'Latundan',
     kind: 'Dessert banana',
     genome: 'AAB',
-    image: '/assets/variety_latundan.jpg',
+    image: '/assets/variety_latundan.webp',
     description:
       'A household staple. Short, plump fingers with a thin peel and soft ivory flesh with a light, slightly tangy sweetness.',
     benefits: [B6, POTASSIUM, VITAMIN_C, FIBER],
@@ -232,7 +232,7 @@ export const VARIETIES: Variety[] = [
     name: 'Lakatan',
     kind: 'Dessert banana',
     genome: 'AAA',
-    image: '/assets/variety_lakatan.jpg',
+    image: '/assets/variety_lakatan.webp',
     description:
       'The favourite table banana in Philippine markets. Golden-orange flesh and a strong, sweet aroma, eaten ripe.',
     benefits: [B6, POTASSIUM, VITAMIN_C, FIBER],
@@ -255,6 +255,9 @@ export const varietyByName = (name: string) => VARIETIES.find((v) => v.name === 
 
 /* ---------- phone demo ---------- */
 
+/** The 400px copy of a bundled photo; uploaded photos pass through unchanged. */
+export const thumbnail = (image: string) => image.replace(/^(\/assets\/[\w-]+)\.webp$/, '$1-thumb.webp');
+
 export interface BananaSample {
   id: string;
   variety: string;
@@ -264,10 +267,10 @@ export interface BananaSample {
 }
 
 export const BANANA_SAMPLES: BananaSample[] = [
-  { id: 'lakatan-ripe', variety: 'Lakatan', ripeness: 'Ripe', confidence: 0.94, image: '/assets/variety_lakatan.jpg' },
-  { id: 'saba-unripe', variety: 'Saba', ripeness: 'Unripe', confidence: 0.91, image: '/assets/variety_saba.jpg' },
-  { id: 'cavendish-ripe', variety: 'Cavendish', ripeness: 'Ripe', confidence: 0.88, image: '/assets/variety_cavendish.jpg' },
-  { id: 'latundan-overripe', variety: 'Latundan', ripeness: 'Overripe', confidence: 0.76, image: '/assets/variety_latundan.jpg' }
+  { id: 'lakatan-ripe', variety: 'Lakatan', ripeness: 'Ripe', confidence: 0.94, image: '/assets/variety_lakatan.webp' },
+  { id: 'saba-unripe', variety: 'Saba', ripeness: 'Unripe', confidence: 0.91, image: '/assets/variety_saba.webp' },
+  { id: 'cavendish-ripe', variety: 'Cavendish', ripeness: 'Ripe', confidence: 0.88, image: '/assets/variety_cavendish.webp' },
+  { id: 'latundan-overripe', variety: 'Latundan', ripeness: 'Overripe', confidence: 0.76, image: '/assets/variety_latundan.webp' }
 ];
 
 export interface ScanRecord {
@@ -286,7 +289,7 @@ export const INITIAL_MOCK_HISTORY: ScanRecord[] = [
     ripeness: 'Ripe',
     confidence: 0.94,
     timestamp: 'Today, 07:12',
-    image: '/assets/variety_lakatan.jpg'
+    image: '/assets/variety_lakatan.webp'
   },
   {
     id: 'scan-0940',
@@ -294,7 +297,7 @@ export const INITIAL_MOCK_HISTORY: ScanRecord[] = [
     ripeness: 'Unripe',
     confidence: 0.91,
     timestamp: 'Today, 06:58',
-    image: '/assets/variety_saba.jpg'
+    image: '/assets/variety_saba.webp'
   },
   {
     id: 'scan-0939',
@@ -302,6 +305,6 @@ export const INITIAL_MOCK_HISTORY: ScanRecord[] = [
     ripeness: 'Ripe',
     confidence: 0.88,
     timestamp: 'Yesterday, 17:40',
-    image: '/assets/variety_cavendish.jpg'
+    image: '/assets/variety_cavendish.webp'
   }
 ];

@@ -102,7 +102,7 @@ export const ArchitectureSpecs: React.FC = () => {
                   viewport={{ once: true, amount: 0.4 }}
                   transition={{ duration: 0.9, delay: 0.2 + i * 0.12, ease: EASE_OUT }}
                 >
-                  <span className="pipe__icon" style={{ animationDelay: `${i * 0.75}s` }}>
+                  <span className="pipe__icon" style={{ '--glow-delay': `${i * 0.75}s` } as React.CSSProperties}>
                     <Icon size={28} />
                   </span>
                   <p className="pipe__num mono">0{i + 1}</p>

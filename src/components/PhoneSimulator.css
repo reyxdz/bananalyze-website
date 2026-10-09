@@ -373,23 +373,34 @@
 .vf__c--br { bottom: 0; right: 0; border-bottom-width: 3px; border-right-width: 3px; border-bottom-right-radius: 10px; }
 .vf__c--bl { bottom: 0; left: 0; border-bottom-width: 3px; border-left-width: 3px; border-bottom-left-radius: 10px; }
 
+/* The span is the sweep's travel distance; the visible line is its top edge,
+   so it can move with transform instead of re-laying out every frame. */
 .vf__line {
   position: absolute;
+  top: 6%;
+  bottom: 6%;
   left: 8%;
   right: 8%;
+  pointer-events: none;
+  animation: vf-sweep 2.8s var(--ease-in-out) infinite alternate;
+}
+
+.vf__line::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
   height: 2px;
   border-radius: 2px;
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.95), transparent);
   box-shadow: 0 0 18px rgba(255, 255, 255, 0.5);
-  animation: vf-sweep 2.8s var(--ease-in-out) infinite alternate;
 }
 
 @keyframes vf-sweep {
   from {
-    top: 6%;
+    transform: translateY(0);
   }
   to {
-    top: 94%;
+    transform: translateY(100%);
   }
 }
 

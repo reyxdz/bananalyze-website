@@ -1,5 +1,5 @@
-import React, { useRef } from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import React from 'react';
+import { motion } from 'framer-motion';
 import { ArrowIcon, DownloadIcon } from './AnimatedIcons';
 import { EASE_OUT, useIconTrigger } from '../lib/motion';
 import { scrollToId } from '../lib/smoothScroll';
@@ -32,10 +32,6 @@ const REVEAL_EASE: [number, number, number, number] = [0.76, 0, 0.24, 1];
 export const HeroSection: React.FC<HeroSectionProps> = ({ openDownloadModal }) => {
   const release = useRelease();
   const trigger = useIconTrigger();
-  const frameRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: frameRef, offset: ['start end', 'end start'] });
-  const stageY = useTransform(scrollYProgress, [0, 1], ['-2.5%', '2.5%']);
-
   return (
     <section id="top" className="hero">
       <div className="container hero__grid">
@@ -123,13 +119,12 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ openDownloadModal }) =
         </div>
 
         <motion.div
-          ref={frameRef}
           className="hero__frame"
           initial={{ clipPath: 'inset(100% 0% 0% 0% round 34px)' }}
           animate={{ clipPath: 'inset(0% 0% 0% 0% round 34px)' }}
           transition={{ duration: 1.5, delay: 0.25, ease: REVEAL_EASE }}
         >
-          <HeroScan parallax={stageY} />
+          <HeroScan />
         </motion.div>
       </div>
 

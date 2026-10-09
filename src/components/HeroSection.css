@@ -27,7 +27,6 @@
 
 .hero__ripe {
   color: var(--ripe);
-  transition: color 0.6s ease;
 }
 
 .hero__lede {
@@ -84,6 +83,30 @@
   overflow: hidden;
   background: #0B1611;
   box-shadow: 0 50px 90px -46px rgba(15, 34, 25, 0.6);
+}
+
+/* The scan drifts against the frame as it scrolls by, on the compositor; browsers
+   without scroll-driven animations just skip it. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .hero__frame {
+      view-timeline-name: --hero-frame;
+    }
+
+    .hero__frame .scan__stage {
+      animation: hero-parallax linear both;
+      animation-timeline: --hero-frame;
+    }
+  }
+}
+
+@keyframes hero-parallax {
+  from {
+    transform: translateY(-2.5%);
+  }
+  to {
+    transform: translateY(2.5%);
+  }
 }
 
 /* ---------- facts ---------- */

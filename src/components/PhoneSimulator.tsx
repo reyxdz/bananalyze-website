@@ -6,6 +6,7 @@ import {
   RIPENESS_LEVELS,
   confidenceLevel,
   ripenessLevel,
+  thumbnail,
   varietyByName
 } from '../data/bananaData';
 import type { BananaSample, Ripeness, ScanRecord } from '../data/bananaData';
@@ -137,7 +138,7 @@ export const PhoneSimulator: React.FC = () => {
                     aria-pressed={isSelected}
                   >
                     <span className="sample__img">
-                      <img src={sample.image} alt="" loading="lazy" />
+                      <img src={thumbnail(sample.image)} alt="" loading="lazy" decoding="async" />
                     </span>
                     <span className="sample__row">
                       <span className="sample__name">{sample.variety}</span>
@@ -256,6 +257,7 @@ export const PhoneSimulator: React.FC = () => {
                       key={activeImage}
                       src={activeImage}
                       alt="Banana in the viewfinder"
+                      decoding="async"
                       className="phone__photo"
                       style={{ filter: flashOn ? 'brightness(1.18) contrast(1.05)' : 'none' }}
                       initial={{ opacity: 0, scale: 1.08 }}
@@ -428,7 +430,7 @@ export const PhoneSimulator: React.FC = () => {
                               animate={{ opacity: 1, x: 0 }}
                               transition={{ delay: 0.12 + i * 0.05, duration: 0.5, ease: EASE_OUT }}
                             >
-                              <img src={item.image} alt="" />
+                              <img src={thumbnail(item.image)} alt="" decoding="async" />
                               <span className="drawer__meta">
                                 <strong>{item.variety}</strong>
                                 <span className="mono">{item.timestamp}</span>

@@ -61,6 +61,9 @@ function spawnRim({ x, y }: Point, radius: number) {
   rim.className = 'theme-rim';
   rim.style.left = `${x}px`;
   rim.style.top = `${y}px`;
+  const inView = document.elementFromPoint(window.innerWidth / 2, window.innerHeight / 2);
+  const ripe = inView && getComputedStyle(inView).getPropertyValue('--ripe').trim();
+  if (ripe) rim.style.setProperty('--ripe', ripe);
   document.body.appendChild(rim);
   return {
     play() {

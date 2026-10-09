@@ -1,11 +1,9 @@
-@import 'lenis/dist/lenis.css';
-
 /* ==========================================================================
    Bananalyze — tokens
    Paper is the pale inside of a banana-leaf sheath, ink and stalk are the
    pseudostem, sticker is the cobalt oval label stuck on every export hand.
-   --s1..--s7 run green to freckled gold; the unripe, ripe and overripe colours
-   are picked from them and drive --ripe, which shifts as you scroll.
+   --s1..--s7 run green to freckled gold; each section takes the next one as its
+   --ripe, so the page ripens top to bottom (and the scrollbar with it, App.tsx).
    ========================================================================== */
 
 /* .tone-light pins surfaces that are light in both themes (the phone's result
@@ -72,7 +70,7 @@
   --s6: #F1B524;
   --s7: #D2901C;
   --fleck: #5A3A17;
-  --ripe: var(--s1);
+  --ripe: var(--s5);
   --ripe-ramp: linear-gradient(90deg, var(--s1), var(--s2), var(--s3), var(--s4), var(--s5), var(--s6), var(--s7));
 
   --font-sans: 'Archivo', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -107,7 +105,6 @@ html {
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
   scroll-padding-top: calc(var(--header-h) + 12px);
 }
 
@@ -151,6 +148,22 @@ input {
 ::selection {
   background: var(--ripe);
   color: var(--stalk);
+}
+
+#top { --ripe: var(--s2); }
+#simulator { --ripe: var(--s3); }
+#ripeness { --ripe: var(--s4); }
+#varieties,
+#offline { --ripe: var(--s5); }
+#field-ux,
+#architecture { --ripe: var(--s6); }
+#faq,
+.foot { --ripe: var(--s7); }
+
+[data-offscreen] *,
+[data-offscreen] *::before,
+[data-offscreen] *::after {
+  animation-play-state: paused !important;
 }
 
 /* Theme switch: the new theme opens as a circle from the toggle (theme.ts drives the
@@ -483,7 +496,6 @@ body::-webkit-scrollbar-thumb:active {
 
 .word-mask > span {
   display: inline-block;
-  will-change: transform;
 }
 
 .chip {

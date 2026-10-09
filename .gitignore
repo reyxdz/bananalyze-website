@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Android release signing key backup (never commit)
+release-key-backup/
